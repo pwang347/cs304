@@ -13,27 +13,13 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
+	"github.com/pwang347/cs304/server/common"
 	"github.com/pwang347/cs304/server/queries"
 )
 
 const (
 	// DefaultServerPort represents the default port number for server
 	DefaultServerPort = 8080
-
-	// DefaultMySQLUser represents the default user
-	DefaultMySQLUser = "root"
-
-	// DefaultMySQLPassword represents the default password
-	DefaultMySQLPassword = ""
-
-	// DefaultMySQLHost represents the default host
-	DefaultMySQLHost = "localhost"
-
-	// DefaultMySQLPort represents the default port
-	DefaultMySQLPort = 3306
-
-	// DefaultMySQLDbName represents the default database name
-	DefaultMySQLDbName = "cs304"
 
 	// ErrorNotFound represents the error for URL not found
 	ErrorNotFound = "not-found"
@@ -91,15 +77,15 @@ func mapJSONEndpoints(queries map[string]query) func(http.ResponseWriter, *http.
 func main() {
 	var (
 		port          = flag.Int("port", DefaultServerPort, "webserver port")
-		mysqlUser     = flag.String("user", DefaultMySQLUser, "mysql user")
-		mysqlPassword = flag.String("password", DefaultMySQLPassword, "mysql password")
-		mysqlHost     = flag.String("mysqlHost", DefaultMySQLHost, "mysql host")
-		mysqlPort     = flag.Int("mysqlPort", DefaultMySQLPort, "mysql port")
-		mysqlDbName   = flag.String("dbName", DefaultMySQLDbName, "mysql database name")
+		mysqlUser     = flag.String("user", common.DefaultMySQLUser, "mysql user")
+		mysqlPassword = flag.String("password", common.DefaultMySQLPassword, "mysql password")
+		mysqlHost     = flag.String("mysqlHost", common.DefaultMySQLHost, "mysql host")
+		mysqlPort     = flag.Int("mysqlPort", common.DefaultMySQLPort, "mysql port")
+		mysqlDbName   = flag.String("dbName", common.DefaultMySQLDbName, "mysql database name")
 		err           error
 	)
 
-        flag.Parse()
+	flag.Parse()
 
 	if len(*mysqlPassword) > 0 {
 		*mysqlPassword = ":" + *mysqlPassword
@@ -125,6 +111,6 @@ func main() {
 	r.HandleFunc("/api/billing/{query}", mapJSONEndpoints(billingQueries))
 	http.Handle("/", r)
 
-        fmt.Println(fmt.Sprintf("Starting webserver at http://0.0.0.0:%d...", *port))
+	fmt.Println(fmt.Sprintf("Starting webserver at http://0.0.0.0:%d...", *port))
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", *port), handlers.LoggingHandler(os.Stdout, r)))
 }

@@ -12,6 +12,7 @@ import (
 // CreateCreditCard creates a new creditCard
 func CreateCreditCard(db *sql.DB, params url.Values) (data []byte, err error) {
 	var (
+		result      sql.Result
 		response    = SQLResponse{Rows: 0}
 		tx          *sql.Tx
 		cardNumber  string
@@ -39,7 +40,7 @@ func CreateCreditCard(db *sql.DB, params url.Values) (data []byte, err error) {
 	if cardType, err = strconv.Atoi(cardTypeStr); err != nil {
 		return
 	}
-	if _, err = tx.Exec("INSERT INTO CreditCard (cardNumber,cvc,expiryDate,cardType) VALUES(?,?,?,?);",
+	if result, err = tx.Exec("INSERT INTO CreditCard (cardNumber,cvc,expiryDate,cardType) VALUES(?,?,?,?);",
 		cardNumber, cvc, expiryDate, cardType); err != nil {
 		tx.Rollback()
 		return
@@ -47,8 +48,9 @@ func CreateCreditCard(db *sql.DB, params url.Values) (data []byte, err error) {
 	if err = tx.Commit(); err != nil {
 		return
 	}
-
-	response.Rows = 1
+	if response.Rows, err = result.RowsAffected(); err != nil {
+		return
+	}
 	data, err = json.Marshal(response)
 	return
 }
@@ -56,6 +58,7 @@ func CreateCreditCard(db *sql.DB, params url.Values) (data []byte, err error) {
 // DeleteCreditCard deletes a credit card
 func DeleteCreditCard(db *sql.DB, params url.Values) (data []byte, err error) {
 	var (
+		result     sql.Result
 		response   = SQLResponse{Rows: 0}
 		tx         *sql.Tx
 		cardNumber string
@@ -67,15 +70,16 @@ func DeleteCreditCard(db *sql.DB, params url.Values) (data []byte, err error) {
 	if cardNumber, err = common.GetRequiredParam(params, "cardNumber"); err != nil {
 		return
 	}
-	if _, err = tx.Exec("DELETE FROM CreditCard WHERE cardNumber=?;", cardNumber); err != nil {
+	if result, err = tx.Exec("DELETE FROM CreditCard WHERE cardNumber=?;", cardNumber); err != nil {
 		tx.Rollback()
 		return
 	}
 	if err = tx.Commit(); err != nil {
 		return
 	}
-
-	response.Rows = 1
+	if response.Rows, err = result.RowsAffected(); err != nil {
+		return
+	}
 	data, err = json.Marshal(response)
 	return
 }
@@ -83,6 +87,7 @@ func DeleteCreditCard(db *sql.DB, params url.Values) (data []byte, err error) {
 // AddCreditCardToOrganization adds a credit card to an existing organization
 func AddCreditCardToOrganization(db *sql.DB, params url.Values) (data []byte, err error) {
 	var (
+		result           sql.Result
 		response         = SQLResponse{Rows: 0}
 		tx               *sql.Tx
 		creditCardNumber string
@@ -98,15 +103,16 @@ func AddCreditCardToOrganization(db *sql.DB, params url.Values) (data []byte, er
 	if organizationName, err = common.GetRequiredParam(params, "organizationName"); err != nil {
 		return
 	}
-	if _, err = tx.Exec("INSERT INTO OrganizationCreditCardPairs (creditCardNumber,organizationName) VALUES(?,?);", creditCardNumber, organizationName); err != nil {
+	if result, err = tx.Exec("INSERT INTO OrganizationCreditCardPairs (creditCardNumber,organizationName) VALUES(?,?);", creditCardNumber, organizationName); err != nil {
 		tx.Rollback()
 		return
 	}
 	if err = tx.Commit(); err != nil {
 		return
 	}
-
-	response.Rows = 1
+	if response.Rows, err = result.RowsAffected(); err != nil {
+		return
+	}
 	data, err = json.Marshal(response)
 	return
 }
@@ -114,6 +120,7 @@ func AddCreditCardToOrganization(db *sql.DB, params url.Values) (data []byte, er
 // RemoveCreditCardFromOrganization removes a credit card from an existing organization
 func RemoveCreditCardFromOrganization(db *sql.DB, params url.Values) (data []byte, err error) {
 	var (
+		result           sql.Result
 		response         = SQLResponse{Rows: 0}
 		tx               *sql.Tx
 		creditCardNumber string
@@ -129,7 +136,7 @@ func RemoveCreditCardFromOrganization(db *sql.DB, params url.Values) (data []byt
 	if organizationName, err = common.GetRequiredParam(params, "organizationName"); err != nil {
 		return
 	}
-	if _, err = tx.Exec("DELETE FROM OrganizationCreditCardPairs WHERE creditCardNumber=? AND organizationName=?;",
+	if result, err = tx.Exec("DELETE FROM OrganizationCreditCardPairs WHERE creditCardNumber=? AND organizationName=?;",
 		creditCardNumber, organizationName); err != nil {
 		tx.Rollback()
 		return
@@ -137,8 +144,9 @@ func RemoveCreditCardFromOrganization(db *sql.DB, params url.Values) (data []byt
 	if err = tx.Commit(); err != nil {
 		return
 	}
-
-	response.Rows = 1
+	if response.Rows, err = result.RowsAffected(); err != nil {
+		return
+	}
 	data, err = json.Marshal(response)
 	return
 }

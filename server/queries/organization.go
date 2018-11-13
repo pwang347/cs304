@@ -12,6 +12,7 @@ import (
 // CreateOrganization creates a new organization
 func CreateOrganization(db *sql.DB, params url.Values) (data []byte, err error) {
 	var (
+		result              sql.Result
 		response            = SQLResponse{Rows: 0}
 		tx                  *sql.Tx
 		name                string
@@ -35,7 +36,7 @@ func CreateOrganization(db *sql.DB, params url.Values) (data []byte, err error) 
 	if contactEmailAddress, err = common.GetRequiredParam(params, "contactEmailAddress"); err != nil {
 		return
 	}
-	if _, err = tx.Exec("INSERT INTO Organization (name,createdTimestamp,contactEmailAddress) VALUES(?,?,?);",
+	if result, err = tx.Exec("INSERT INTO Organization (name,createdTimestamp,contactEmailAddress) VALUES(?,?,?);",
 		name, createdTimestamp, contactEmailAddress); err != nil {
 		tx.Rollback()
 		return
@@ -43,8 +44,9 @@ func CreateOrganization(db *sql.DB, params url.Values) (data []byte, err error) 
 	if err = tx.Commit(); err != nil {
 		return
 	}
-
-	response.Rows = 1
+	if response.Rows, err = result.RowsAffected(); err != nil {
+		return
+	}
 	data, err = json.Marshal(response)
 	return
 }
@@ -52,6 +54,7 @@ func CreateOrganization(db *sql.DB, params url.Values) (data []byte, err error) 
 // DeleteOrganization deletes an organization
 func DeleteOrganization(db *sql.DB, params url.Values) (data []byte, err error) {
 	var (
+		result   sql.Result
 		response = SQLResponse{Rows: 0}
 		tx       *sql.Tx
 		name     string
@@ -63,15 +66,16 @@ func DeleteOrganization(db *sql.DB, params url.Values) (data []byte, err error) 
 	if name, err = common.GetRequiredParam(params, "name"); err != nil {
 		return
 	}
-	if _, err = tx.Exec("DELETE FROM Organization WHERE name=?;", name); err != nil {
+	if result, err = tx.Exec("DELETE FROM Organization WHERE name=?;", name); err != nil {
 		tx.Rollback()
 		return
 	}
 	if err = tx.Commit(); err != nil {
 		return
 	}
-
-	response.Rows = 1
+	if response.Rows, err = result.RowsAffected(); err != nil {
+		return
+	}
 	data, err = json.Marshal(response)
 	return
 }
@@ -79,6 +83,7 @@ func DeleteOrganization(db *sql.DB, params url.Values) (data []byte, err error) 
 // AddUserToOrganization adds a user to an existing organization
 func AddUserToOrganization(db *sql.DB, params url.Values) (data []byte, err error) {
 	var (
+		result           sql.Result
 		response         = SQLResponse{Rows: 0}
 		tx               *sql.Tx
 		organizationName string
@@ -94,15 +99,16 @@ func AddUserToOrganization(db *sql.DB, params url.Values) (data []byte, err erro
 	if userEmailAddress, err = common.GetRequiredParam(params, "userEmailAddress"); err != nil {
 		return
 	}
-	if _, err = tx.Exec("INSERT INTO UserOrganizationPairs (organizationName,userEmailAddress) VALUES(?,?);", organizationName, userEmailAddress); err != nil {
+	if result, err = tx.Exec("INSERT INTO UserOrganizationPairs (organizationName,userEmailAddress) VALUES(?,?);", organizationName, userEmailAddress); err != nil {
 		tx.Rollback()
 		return
 	}
 	if err = tx.Commit(); err != nil {
 		return
 	}
-
-	response.Rows = 1
+	if response.Rows, err = result.RowsAffected(); err != nil {
+		return
+	}
 	data, err = json.Marshal(response)
 	return
 }
@@ -110,6 +116,7 @@ func AddUserToOrganization(db *sql.DB, params url.Values) (data []byte, err erro
 // RemoveUserFromOrganization removes a user from an existing organization
 func RemoveUserFromOrganization(db *sql.DB, params url.Values) (data []byte, err error) {
 	var (
+		result           sql.Result
 		response         = SQLResponse{Rows: 0}
 		tx               *sql.Tx
 		organizationName string
@@ -125,7 +132,7 @@ func RemoveUserFromOrganization(db *sql.DB, params url.Values) (data []byte, err
 	if userEmailAddress, err = common.GetRequiredParam(params, "userEmailAddress"); err != nil {
 		return
 	}
-	if _, err = tx.Exec("DELETE FROM UserOrganizationPairs WHERE organizationName=? AND userEmailAddress=?;",
+	if result, err = tx.Exec("DELETE FROM UserOrganizationPairs WHERE organizationName=? AND userEmailAddress=?;",
 		organizationName, userEmailAddress); err != nil {
 		tx.Rollback()
 		return
@@ -133,8 +140,9 @@ func RemoveUserFromOrganization(db *sql.DB, params url.Values) (data []byte, err
 	if err = tx.Commit(); err != nil {
 		return
 	}
-
-	response.Rows = 1
+	if response.Rows, err = result.RowsAffected(); err != nil {
+		return
+	}
 	data, err = json.Marshal(response)
 	return
 }

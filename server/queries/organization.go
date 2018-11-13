@@ -6,49 +6,64 @@ import (
 	"net/url"
 	"strconv"
 
-	"github.com/cs304/server/common"
+	"github.com/pwang347/cs304/server/common"
 )
 
-// CreateUser creates a new user
-func CreateUser(db *sql.DB, params url.Values) (data []byte, err error) {
+// CreateOrganization creates a new organization
+func CreateOrganization(db *sql.DB, params url.Values) (data []byte, err error) {
 	var (
-		response             = SQLResponse{Rows: 0}
-		tx                   *sql.Tx
-		emailAddress         string
-		firstName            string
-		lastName             string
-		passwordHash         string
-		isAdminStr           string
-		isAdmin              bool
-		twoFactorPhoneNumber string
+		response            = SQLResponse{Rows: 0}
+		tx                  *sql.Tx
+		name                string
+		createdTimestampStr string
+		createdTimestamp    int
+		contactEmailAddress string
 	)
 
 	if tx, err = db.Begin(); err != nil {
 		return nil, err
 	}
-	if emailAddress, err = common.GetRequiredParam(params, "emailAddress"); err != nil {
+	if name, err = common.GetRequiredParam(params, "name"); err != nil {
 		return
 	}
-	if firstName, err = common.GetRequiredParam(params, "firstName"); err != nil {
+	if createdTimestampStr, err = common.GetRequiredParam(params, "createdTimestamp"); err != nil {
 		return
 	}
-	if lastName, err = common.GetRequiredParam(params, "lastName"); err != nil {
+	if createdTimestamp, err = strconv.Atoi(createdTimestampStr); err != nil {
 		return
 	}
-	if passwordHash, err = common.GetRequiredParam(params, "passwordHash"); err != nil {
+	if contactEmailAddress, err = common.GetRequiredParam(params, "contactEmailAddress"); err != nil {
 		return
 	}
-	if isAdminStr, err = common.GetRequiredParam(params, "isAdmin"); err != nil {
+	if _, err = tx.Exec("INSERT INTO Organization (name,createdTimestamp,contactEmailAddress) VALUES(?,?,?);",
+		name, createdTimestamp, contactEmailAddress); err != nil {
+		tx.Rollback()
 		return
 	}
-	if isAdmin, err = strconv.ParseBool(isAdminStr); err != nil {
+	if err = tx.Commit(); err != nil {
 		return
 	}
-	if twoFactorPhoneNumber, err = common.GetRequiredParam(params, "twoFactorPhoneNumber"); err != nil {
+
+	response.Rows = 1
+	data, err = json.Marshal(response)
+	return
+}
+
+// DeleteOrganization deletes an organization
+func DeleteOrganization(db *sql.DB, params url.Values) (data []byte, err error) {
+	var (
+		response = SQLResponse{Rows: 0}
+		tx       *sql.Tx
+		name     string
+	)
+
+	if tx, err = db.Begin(); err != nil {
+		return nil, err
+	}
+	if name, err = common.GetRequiredParam(params, "name"); err != nil {
 		return
 	}
-	if _, err = tx.Exec("INSERT INTO User (emailAddress,firstName,lastName,passwordHash,isAdmin,twoFactorPhoneNumber) VALUES(?,?,?,?,?,?);",
-		emailAddress, firstName, lastName, passwordHash, isAdmin, twoFactorPhoneNumber); err != nil {
+	if _, err = tx.Exec("DELETE FROM Organization WHERE name=?;", name); err != nil {
 		tx.Rollback()
 		return
 	}

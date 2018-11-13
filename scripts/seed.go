@@ -8,8 +8,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cs304/server/common"
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/pwang347/cs304/server/common"
 )
 
 var (

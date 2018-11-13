@@ -2,7 +2,8 @@ DROP DATABASE IF EXISTS cs304;
 CREATE DATABASE cs304;
 USE cs304;
 
-CREATE TABLE User (
+CREATE TABLE User
+(
     emailAddress VARCHAR(255),
     firstName VARCHAR(20),
     lastName VARCHAR(20),
@@ -13,7 +14,8 @@ CREATE TABLE User (
     UNIQUE (twoFactorPhoneNumber)
 );
 
-CREATE TABLE Organization (
+CREATE TABLE Organization
+(
     name VARCHAR(255),
     createdTimestamp TIMESTAMP,
     contactEmailAddress VARCHAR(255) NOT NULL,
@@ -24,7 +26,8 @@ CREATE TABLE Organization (
     UNIQUE (createdTimestamp, contactEmailAddress)
 );
 
-CREATE TABLE UserOrganizationPairs (
+CREATE TABLE UserOrganizationPairs
+(
     organizationName VARCHAR(255),
     userEmailAddress VARCHAR(255),
     PRIMARY KEY (organizationName, userEmailAddress),
@@ -36,7 +39,8 @@ CREATE TABLE UserOrganizationPairs (
         ON UPDATE CASCADE
 );
 
-CREATE TABLE AccessGroup (
+CREATE TABLE AccessGroup
+(
     name VARCHAR(255),
     organizationName VARCHAR(255),
     PRIMARY KEY (name, organizationName),
@@ -45,7 +49,8 @@ CREATE TABLE AccessGroup (
         ON UPDATE CASCADE
 );
 
-CREATE TABLE UserAccessGroupPairs (
+CREATE TABLE UserAccessGroupPairs
+(
     accessGroupName VARCHAR(255),
     accessGroupOrganizationName VARCHAR(255),
     userEmailAddress VARCHAR(255),
@@ -58,7 +63,8 @@ CREATE TABLE UserAccessGroupPairs (
         ON UPDATE CASCADE
 );
 
-CREATE TABLE Service (
+CREATE TABLE Service
+(
     name VARCHAR(255),
     description VARCHAR(255),
     isPreview BOOLEAN,
@@ -67,12 +73,14 @@ CREATE TABLE Service (
     PRIMARY KEY (name)
 );
 
-CREATE TABLE Region (
+CREATE TABLE Region
+(
     name VARCHAR(255),
     PRIMARY KEY (name)
 );
 
-CREATE TABLE ServiceInstance (
+CREATE TABLE ServiceInstance
+(
     name VARCHAR(255),
     regionName VARCHAR(255) NOT NULL,
     serviceName VARCHAR(255),
@@ -89,7 +97,8 @@ CREATE TABLE ServiceInstance (
         ON UPDATE CASCADE
 );
 
-CREATE TABLE ServiceInstanceConfiguration (
+CREATE TABLE ServiceInstanceConfiguration
+(
     configKey VARCHAR(255),
     serviceInstanceName VARCHAR(255),
     serviceInstanceServiceName VARCHAR(255),
@@ -101,7 +110,8 @@ CREATE TABLE ServiceInstanceConfiguration (
         ON UPDATE CASCADE
 );
 
-CREATE TABLE ServiceInstanceKey (
+CREATE TABLE ServiceInstanceKey
+(
     keyValue VARCHAR(255),
     activeUntil TIMESTAMP,
     serviceInstanceName VARCHAR(255),
@@ -113,7 +123,8 @@ CREATE TABLE ServiceInstanceKey (
         ON UPDATE CASCADE
 );
 
-CREATE TABLE ServiceInstanceAccessGroupPermissions (
+CREATE TABLE ServiceInstanceAccessGroupPermissions
+(
     serviceInstanceName VARCHAR(255),
     serviceInstanceServiceName VARCHAR(255),
     serviceInstanceOrganizationName VARCHAR(255),
@@ -128,13 +139,15 @@ CREATE TABLE ServiceInstanceAccessGroupPermissions (
         ON UPDATE CASCADE
 );
 
-CREATE TABLE BaseImage (
+CREATE TABLE BaseImage
+(
     os VARCHAR(255),
     version VARCHAR(255),
     PRIMARY KEY (os, version)
 );
 
-CREATE TABLE VirtualMachine (
+CREATE TABLE VirtualMachine
+(
     description TEXT,
     ipAddress VARCHAR(255),
     state INT,
@@ -161,7 +174,8 @@ CREATE TABLE VirtualMachine (
         ON UPDATE CASCADE
 );
 
-CREATE TABLE EventLog (
+CREATE TABLE EventLog
+(
     logNumber INT,
     timestamp TIMESTAMP,
     data TEXT,
@@ -173,7 +187,8 @@ CREATE TABLE EventLog (
         ON UPDATE CASCADE
 );
 
-CREATE TABLE VirtualMachineAccessGroupPermissions (
+CREATE TABLE VirtualMachineAccessGroupPermissions
+(
     VirtualMachineIpAddress VARCHAR(255),
     accessGroupOrganizationName VARCHAR(255),
     accessGroupName VARCHAR(255),
@@ -187,7 +202,8 @@ CREATE TABLE VirtualMachineAccessGroupPermissions (
         ON UPDATE CASCADE
 );
 
-CREATE TABLE ServiceSubscription (
+CREATE TABLE ServiceSubscription
+(
     type INT,
     serviceName VARCHAR(255),
     description VARCHAR(255),
@@ -197,7 +213,8 @@ CREATE TABLE ServiceSubscription (
         ON UPDATE CASCADE
 );
 
-CREATE TABLE CreditCard (
+CREATE TABLE CreditCard
+(
     cardNumber CHAR(20),
     cvc CHAR(3),
     expiryDate DATE,
@@ -205,7 +222,8 @@ CREATE TABLE CreditCard (
     PRIMARY KEY (cardNumber)
 );
 
-CREATE TABLE OrganizationCreditCardPairs (
+CREATE TABLE OrganizationCreditCardPairs
+(
     organizationName VARCHAR(255),
     creditCardNumber CHAR(20),
     PRIMARY KEY (organizationName, creditCardNumber),
@@ -217,7 +235,8 @@ CREATE TABLE OrganizationCreditCardPairs (
         ON UPDATE CASCADE
 );
 
-CREATE TABLE Transaction (
+CREATE TABLE Transaction
+(
     transactionNumber INT,
     serviceSubscriptionType INT NOT NULL,
     serviceSubscriptionServiceName VARCHAR(255) NOT NULL,
@@ -233,7 +252,8 @@ CREATE TABLE Transaction (
         ON UPDATE CASCADE
 );
 
-CREATE TABLE OrganizationServiceSubscriptionPairs (
+CREATE TABLE OrganizationServiceSubscriptionPairs
+(
     organizationName VARCHAR(255),
     serviceSubscriptionType INT,
     serviceSubscriptionServiceName VARCHAR(255),

@@ -75,3 +75,34 @@ func DeleteOrganization(db *sql.DB, params url.Values) (data []byte, err error) 
 	data, err = json.Marshal(response)
 	return
 }
+
+// AddUserToOrganization adds a user to an existing organization
+func AddUserToOrganization(db *sql.DB, params url.Values) (data []byte, err error) {
+	var (
+		response         = SQLResponse{Rows: 0}
+		tx               *sql.Tx
+		organizationName string
+		userEmailAddress string
+	)
+
+	if tx, err = db.Begin(); err != nil {
+		return nil, err
+	}
+	if organizationName, err = common.GetRequiredParam(params, "organizationName"); err != nil {
+		return
+	}
+	if userEmailAddress, err = common.GetRequiredParam(params, "userEmailAddress"); err != nil {
+		return
+	}
+	if _, err = tx.Exec("INSERT INTO UserOrganizationPairs (organizationName,userEmailAddress) VALUES(?,?);", organizationName, userEmailAddress); err != nil {
+		tx.Rollback()
+		return
+	}
+	if err = tx.Commit(); err != nil {
+		return
+	}
+
+	response.Rows = 1
+	data, err = json.Marshal(response)
+	return
+}

@@ -79,3 +79,66 @@ func DeleteCreditCard(db *sql.DB, params url.Values) (data []byte, err error) {
 	data, err = json.Marshal(response)
 	return
 }
+
+// AddCreditCardToOrganization adds a credit card to an existing organization
+func AddCreditCardToOrganization(db *sql.DB, params url.Values) (data []byte, err error) {
+	var (
+		response         = SQLResponse{Rows: 0}
+		tx               *sql.Tx
+		creditCardNumber string
+		organizationName string
+	)
+
+	if tx, err = db.Begin(); err != nil {
+		return nil, err
+	}
+	if creditCardNumber, err = common.GetRequiredParam(params, "creditCardNumber"); err != nil {
+		return
+	}
+	if organizationName, err = common.GetRequiredParam(params, "organizationName"); err != nil {
+		return
+	}
+	if _, err = tx.Exec("INSERT INTO OrganizationCreditCardPairs (creditCardNumber,organizationName) VALUES(?,?);", creditCardNumber, organizationName); err != nil {
+		tx.Rollback()
+		return
+	}
+	if err = tx.Commit(); err != nil {
+		return
+	}
+
+	response.Rows = 1
+	data, err = json.Marshal(response)
+	return
+}
+
+// RemoveCreditCardFromOrganization removes a credit card from an existing organization
+func RemoveCreditCardFromOrganization(db *sql.DB, params url.Values) (data []byte, err error) {
+	var (
+		response         = SQLResponse{Rows: 0}
+		tx               *sql.Tx
+		creditCardNumber string
+		organizationName string
+	)
+
+	if tx, err = db.Begin(); err != nil {
+		return nil, err
+	}
+	if creditCardNumber, err = common.GetRequiredParam(params, "creditCardNumber"); err != nil {
+		return
+	}
+	if organizationName, err = common.GetRequiredParam(params, "organizationName"); err != nil {
+		return
+	}
+	if _, err = tx.Exec("DELETE FROM OrganizationCreditCardPairs WHERE creditCardNumber=? AND organizationName=?;",
+		creditCardNumber, organizationName); err != nil {
+		tx.Rollback()
+		return
+	}
+	if err = tx.Commit(); err != nil {
+		return
+	}
+
+	response.Rows = 1
+	data, err = json.Marshal(response)
+	return
+}

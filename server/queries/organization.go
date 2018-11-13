@@ -106,3 +106,35 @@ func AddUserToOrganization(db *sql.DB, params url.Values) (data []byte, err erro
 	data, err = json.Marshal(response)
 	return
 }
+
+// RemoveUserFromOrganization removes a user from an existing organization
+func RemoveUserFromOrganization(db *sql.DB, params url.Values) (data []byte, err error) {
+	var (
+		response         = SQLResponse{Rows: 0}
+		tx               *sql.Tx
+		organizationName string
+		userEmailAddress string
+	)
+
+	if tx, err = db.Begin(); err != nil {
+		return nil, err
+	}
+	if organizationName, err = common.GetRequiredParam(params, "organizationName"); err != nil {
+		return
+	}
+	if userEmailAddress, err = common.GetRequiredParam(params, "userEmailAddress"); err != nil {
+		return
+	}
+	if _, err = tx.Exec("DELETE FROM UserOrganizationPairs WHERE organizationName=? AND userEmailAddress=?;",
+		organizationName, userEmailAddress); err != nil {
+		tx.Rollback()
+		return
+	}
+	if err = tx.Commit(); err != nil {
+		return
+	}
+
+	response.Rows = 1
+	data, err = json.Marshal(response)
+	return
+}

@@ -93,7 +93,43 @@ func AddUserToAccessGroup(db *sql.DB, params url.Values) (data []byte, err error
 	if userEmailAddress, err = common.GetRequiredParam(params, "userEmailAddress"); err != nil {
 		return
 	}
-	if _, err = tx.Exec("INSERT INTO UserAccessGroupPairs (accessGroupName,accessGroupOrganizationName,userEmailAddress) VALUES(?,?);",
+	if _, err = tx.Exec("INSERT INTO UserAccessGroupPairs (accessGroupName,accessGroupOrganizationName,userEmailAddress) VALUES(?,?,?);",
+		accessGroupName, accessGroupOrganizationName, userEmailAddress); err != nil {
+		tx.Rollback()
+		return
+	}
+	if err = tx.Commit(); err != nil {
+		return
+	}
+
+	response.Rows = 1
+	data, err = json.Marshal(response)
+	return
+}
+
+// RemoveUserFromAccessGroup removes a user from an existing organization
+func RemoveUserFromAccessGroup(db *sql.DB, params url.Values) (data []byte, err error) {
+	var (
+		response                    = SQLResponse{Rows: 0}
+		tx                          *sql.Tx
+		accessGroupName             string
+		accessGroupOrganizationName string
+		userEmailAddress            string
+	)
+
+	if tx, err = db.Begin(); err != nil {
+		return nil, err
+	}
+	if accessGroupName, err = common.GetRequiredParam(params, "accessGroupName"); err != nil {
+		return
+	}
+	if accessGroupOrganizationName, err = common.GetRequiredParam(params, "accessGroupOrganizationName"); err != nil {
+		return
+	}
+	if userEmailAddress, err = common.GetRequiredParam(params, "userEmailAddress"); err != nil {
+		return
+	}
+	if _, err = tx.Exec("DELETE FROM UserAccessGroupPairs WHERE accessGroupName=? AND accessGroupOrganizationName=? AND userEmailAddress=?;",
 		accessGroupName, accessGroupOrganizationName, userEmailAddress); err != nil {
 		tx.Rollback()
 		return

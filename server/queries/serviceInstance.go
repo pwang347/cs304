@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"net/url"
-	"strconv"
 
 	"github.com/pwang347/cs304/server/common"
 )
@@ -12,12 +11,13 @@ import (
 // CreateServiceInstance creates a new serviceInstance
 func CreateServiceInstance(db *sql.DB, params url.Values) (data []byte, err error) {
 	var (
-		response             = SQLResponse{Rows: 0}
-		tx                   *sql.Tx
-		name                string
-		regionName          string
-		serviceName         string
-		organizationName    string
+		result           sql.Result
+		response         = SQLResponse{}
+		tx               *sql.Tx
+		name             string
+		regionName       string
+		serviceName      string
+		organizationName string
 	)
 
 	if tx, err = db.Begin(); err != nil {
@@ -35,7 +35,7 @@ func CreateServiceInstance(db *sql.DB, params url.Values) (data []byte, err erro
 	if organizationName, err = common.GetRequiredParam(params, "organizationName"); err != nil {
 		return
 	}
-	if _, err = tx.Exec("INSERT INTO ServiceInstance (name, regionName, serviceName, organizationName) VALUES(?,?,?,?);",
+	if result, err = tx.Exec("INSERT INTO ServiceInstance (name, regionName, serviceName, organizationName) VALUES(?,?,?,?);",
 		name, regionName, serviceName, organizationName); err != nil {
 		tx.Rollback()
 		return
@@ -43,8 +43,9 @@ func CreateServiceInstance(db *sql.DB, params url.Values) (data []byte, err erro
 	if err = tx.Commit(); err != nil {
 		return
 	}
-
-	response.Rows = 1
+	if response.AffectedRows, err = result.RowsAffected(); err != nil {
+		return
+	}
 	data, err = json.Marshal(response)
 	return
 }
@@ -52,11 +53,12 @@ func CreateServiceInstance(db *sql.DB, params url.Values) (data []byte, err erro
 // DeleteServiceInstance deletes a serviceInstance
 func DeleteServiceInstance(db *sql.DB, params url.Values) (data []byte, err error) {
 	var (
-		response = SQLResponse{Rows: 0}
-		tx       *sql.Tx
-		name                string
-		serviceName         string
-		organizationName    string
+		result           sql.Result
+		response         = SQLResponse{}
+		tx               *sql.Tx
+		name             string
+		serviceName      string
+		organizationName string
 	)
 
 	if tx, err = db.Begin(); err != nil {
@@ -71,15 +73,17 @@ func DeleteServiceInstance(db *sql.DB, params url.Values) (data []byte, err erro
 	if organizationName, err = common.GetRequiredParam(params, "organizationName"); err != nil {
 		return
 	}
-	if _, err = tx.Exec("DELETE FROM ServiceInstance WHERE name=? AND serviceName=? AND organizationName=? AND;", emailAddress); err != nil {
+	if result, err = tx.Exec("DELETE FROM ServiceInstance WHERE name=? AND serviceName=? AND organizationName=? AND;",
+		name, serviceName, organizationName); err != nil {
 		tx.Rollback()
 		return
 	}
 	if err = tx.Commit(); err != nil {
 		return
 	}
-
-	response.Rows = 1
+	if response.AffectedRows, err = result.RowsAffected(); err != nil {
+		return
+	}
 	data, err = json.Marshal(response)
 	return
 }

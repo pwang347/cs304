@@ -26,15 +26,40 @@ const (
 )
 
 var (
-	db                  *sql.DB
+	db                 *sql.DB
+	accessGroupQueries = map[string]query{
+		"create":     queries.CreateAccessGroup,
+		"delete":     queries.DeleteAccessGroup,
+		"addUser":    queries.AddUserToAccessGroup,
+		"removeUser": queries.RemoveUserFromAccessGroup,
+	}
+	creditCardQueries = map[string]query{
+		"create":                 queries.CreateCreditCard,
+		"delete":                 queries.DeleteCreditCard,
+		"addToOrganization":      queries.AddCreditCardToOrganization,
+		"removeFromOrganization": queries.RemoveCreditCardFromOrganization,
+	}
 	organizationQueries = map[string]query{
-		"createUser": queries.CreateUser,
+		"create":     queries.CreateOrganization,
+		"delete":     queries.DeleteOrganization,
+		"addUser":    queries.AddUserToOrganization,
+		"removeUser": queries.RemoveUserFromOrganization,
 	}
 	serviceQueries = map[string]query{
-		"createServiceInstance": queries.CreateServiceInstance,
+		"selectAll": queries.QueryAllServices,
 	}
-	billingQueries = map[string]query{
-		"createTransaction": queries.CreateTransaction,
+	serviceInstanceQueries = map[string]query{
+		"create": queries.CreateServiceInstance,
+		"delete": queries.DeleteServiceInstance,
+	}
+	serviceInstanceConfigurationQueries = map[string]query{
+		"create": queries.CreateServiceInstanceConfiguration,
+		"delete": queries.DeleteServiceInstanceConfiguration,
+		"update": queries.UpdateServiceInstanceConfiguration,
+	}
+	userQueries = map[string]query{
+		"create": queries.CreateUser,
+		"delete": queries.DeleteUser,
 	}
 )
 
@@ -106,9 +131,13 @@ func main() {
 	defer db.Close()
 
 	r := mux.NewRouter()
+	r.HandleFunc("/api/accessGroup/{query}", mapJSONEndpoints(accessGroupQueries))
+	r.HandleFunc("/api/creditCard/{query}", mapJSONEndpoints(creditCardQueries))
 	r.HandleFunc("/api/organization/{query}", mapJSONEndpoints(organizationQueries))
 	r.HandleFunc("/api/service/{query}", mapJSONEndpoints(serviceQueries))
-	r.HandleFunc("/api/billing/{query}", mapJSONEndpoints(billingQueries))
+	r.HandleFunc("/api/serviceInstance/{query}", mapJSONEndpoints(serviceInstanceQueries))
+	r.HandleFunc("/api/serviceInstanceConfiguration/{query}", mapJSONEndpoints(serviceInstanceConfigurationQueries))
+	r.HandleFunc("/api/user/{query}", mapJSONEndpoints(userQueries))
 	http.Handle("/", r)
 
 	fmt.Println(fmt.Sprintf("Starting webserver at http://0.0.0.0:%d...", *port))

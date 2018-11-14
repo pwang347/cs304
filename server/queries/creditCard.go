@@ -13,7 +13,7 @@ import (
 func CreateCreditCard(db *sql.DB, params url.Values) (data []byte, err error) {
 	var (
 		result      sql.Result
-		response    = SQLResponse{Rows: 0}
+		response    = SQLResponse{}
 		tx          *sql.Tx
 		cardNumber  string
 		cvc         string
@@ -48,7 +48,7 @@ func CreateCreditCard(db *sql.DB, params url.Values) (data []byte, err error) {
 	if err = tx.Commit(); err != nil {
 		return
 	}
-	if response.Rows, err = result.RowsAffected(); err != nil {
+	if response.AffectedRows, err = result.RowsAffected(); err != nil {
 		return
 	}
 	data, err = json.Marshal(response)
@@ -59,7 +59,7 @@ func CreateCreditCard(db *sql.DB, params url.Values) (data []byte, err error) {
 func DeleteCreditCard(db *sql.DB, params url.Values) (data []byte, err error) {
 	var (
 		result     sql.Result
-		response   = SQLResponse{Rows: 0}
+		response   = SQLResponse{}
 		tx         *sql.Tx
 		cardNumber string
 	)
@@ -77,7 +77,7 @@ func DeleteCreditCard(db *sql.DB, params url.Values) (data []byte, err error) {
 	if err = tx.Commit(); err != nil {
 		return
 	}
-	if response.Rows, err = result.RowsAffected(); err != nil {
+	if response.AffectedRows, err = result.RowsAffected(); err != nil {
 		return
 	}
 	data, err = json.Marshal(response)
@@ -88,7 +88,7 @@ func DeleteCreditCard(db *sql.DB, params url.Values) (data []byte, err error) {
 func AddCreditCardToOrganization(db *sql.DB, params url.Values) (data []byte, err error) {
 	var (
 		result           sql.Result
-		response         = SQLResponse{Rows: 0}
+		response         = SQLResponse{}
 		tx               *sql.Tx
 		creditCardNumber string
 		organizationName string
@@ -110,7 +110,7 @@ func AddCreditCardToOrganization(db *sql.DB, params url.Values) (data []byte, er
 	if err = tx.Commit(); err != nil {
 		return
 	}
-	if response.Rows, err = result.RowsAffected(); err != nil {
+	if response.AffectedRows, err = result.RowsAffected(); err != nil {
 		return
 	}
 	data, err = json.Marshal(response)
@@ -121,7 +121,7 @@ func AddCreditCardToOrganization(db *sql.DB, params url.Values) (data []byte, er
 func RemoveCreditCardFromOrganization(db *sql.DB, params url.Values) (data []byte, err error) {
 	var (
 		result           sql.Result
-		response         = SQLResponse{Rows: 0}
+		response         = SQLResponse{}
 		tx               *sql.Tx
 		creditCardNumber string
 		organizationName string
@@ -144,7 +144,7 @@ func RemoveCreditCardFromOrganization(db *sql.DB, params url.Values) (data []byt
 	if err = tx.Commit(); err != nil {
 		return
 	}
-	if response.Rows, err = result.RowsAffected(); err != nil {
+	if response.AffectedRows, err = result.RowsAffected(); err != nil {
 		return
 	}
 	data, err = json.Marshal(response)

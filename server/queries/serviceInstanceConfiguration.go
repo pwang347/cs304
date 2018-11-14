@@ -12,7 +12,7 @@ import (
 func CreateServiceInstanceConfiguration(db *sql.DB, params url.Values) (data []byte, err error) {
 	var (
 		result                          sql.Result
-		response                        = SQLResponse{Rows: 0}
+		response                        = SQLResponse{}
 		tx                              *sql.Tx
 		configKey                       string
 		serviceInstanceName             string
@@ -48,10 +48,9 @@ func CreateServiceInstanceConfiguration(db *sql.DB, params url.Values) (data []b
 	if err = tx.Commit(); err != nil {
 		return
 	}
-	if response.Rows, err = result.RowsAffected(); err != nil {
+	if response.AffectedRows, err = result.RowsAffected(); err != nil {
 		return
 	}
-	response.Rows = 1
 	data, err = json.Marshal(response)
 	return
 }
@@ -60,7 +59,7 @@ func CreateServiceInstanceConfiguration(db *sql.DB, params url.Values) (data []b
 func DeleteServiceInstanceConfiguration(db *sql.DB, params url.Values) (data []byte, err error) {
 	var (
 		result                          sql.Result
-		response                        = SQLResponse{Rows: 0}
+		response                        = SQLResponse{}
 		tx                              *sql.Tx
 		configKey                       string
 		serviceInstanceName             string
@@ -92,7 +91,7 @@ func DeleteServiceInstanceConfiguration(db *sql.DB, params url.Values) (data []b
 	if err = tx.Commit(); err != nil {
 		return
 	}
-	if response.Rows, err = result.RowsAffected(); err != nil {
+	if response.AffectedRows, err = result.RowsAffected(); err != nil {
 		return
 	}
 	data, err = json.Marshal(response)
@@ -103,7 +102,7 @@ func DeleteServiceInstanceConfiguration(db *sql.DB, params url.Values) (data []b
 func UpdateServiceInstanceConfiguration(db *sql.DB, params url.Values) (data []byte, err error) {
 	var (
 		result                          sql.Result
-		response                        = SQLResponse{Rows: 0}
+		response                        = SQLResponse{}
 		tx                              *sql.Tx
 		configKey                       string
 		serviceInstanceName             string
@@ -145,7 +144,7 @@ func UpdateServiceInstanceConfiguration(db *sql.DB, params url.Values) (data []b
 		return
 	}
 
-	if response.Rows, err = result.RowsAffected(); err != nil {
+	if response.AffectedRows, err = result.RowsAffected(); err != nil {
 		return
 	}
 	data, err = json.Marshal(response)

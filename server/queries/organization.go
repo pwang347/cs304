@@ -13,7 +13,7 @@ import (
 func CreateOrganization(db *sql.DB, params url.Values) (data []byte, err error) {
 	var (
 		result              sql.Result
-		response            = SQLResponse{Rows: 0}
+		response            = SQLResponse{}
 		tx                  *sql.Tx
 		name                string
 		createdTimestampStr string
@@ -44,7 +44,7 @@ func CreateOrganization(db *sql.DB, params url.Values) (data []byte, err error) 
 	if err = tx.Commit(); err != nil {
 		return
 	}
-	if response.Rows, err = result.RowsAffected(); err != nil {
+	if response.AffectedRows, err = result.RowsAffected(); err != nil {
 		return
 	}
 	data, err = json.Marshal(response)
@@ -55,7 +55,7 @@ func CreateOrganization(db *sql.DB, params url.Values) (data []byte, err error) 
 func DeleteOrganization(db *sql.DB, params url.Values) (data []byte, err error) {
 	var (
 		result   sql.Result
-		response = SQLResponse{Rows: 0}
+		response = SQLResponse{}
 		tx       *sql.Tx
 		name     string
 	)
@@ -73,7 +73,7 @@ func DeleteOrganization(db *sql.DB, params url.Values) (data []byte, err error) 
 	if err = tx.Commit(); err != nil {
 		return
 	}
-	if response.Rows, err = result.RowsAffected(); err != nil {
+	if response.AffectedRows, err = result.RowsAffected(); err != nil {
 		return
 	}
 	data, err = json.Marshal(response)
@@ -84,7 +84,7 @@ func DeleteOrganization(db *sql.DB, params url.Values) (data []byte, err error) 
 func AddUserToOrganization(db *sql.DB, params url.Values) (data []byte, err error) {
 	var (
 		result           sql.Result
-		response         = SQLResponse{Rows: 0}
+		response         = SQLResponse{}
 		tx               *sql.Tx
 		organizationName string
 		userEmailAddress string
@@ -106,7 +106,7 @@ func AddUserToOrganization(db *sql.DB, params url.Values) (data []byte, err erro
 	if err = tx.Commit(); err != nil {
 		return
 	}
-	if response.Rows, err = result.RowsAffected(); err != nil {
+	if response.AffectedRows, err = result.RowsAffected(); err != nil {
 		return
 	}
 	data, err = json.Marshal(response)
@@ -117,7 +117,7 @@ func AddUserToOrganization(db *sql.DB, params url.Values) (data []byte, err erro
 func RemoveUserFromOrganization(db *sql.DB, params url.Values) (data []byte, err error) {
 	var (
 		result           sql.Result
-		response         = SQLResponse{Rows: 0}
+		response         = SQLResponse{}
 		tx               *sql.Tx
 		organizationName string
 		userEmailAddress string
@@ -140,7 +140,7 @@ func RemoveUserFromOrganization(db *sql.DB, params url.Values) (data []byte, err
 	if err = tx.Commit(); err != nil {
 		return
 	}
-	if response.Rows, err = result.RowsAffected(); err != nil {
+	if response.AffectedRows, err = result.RowsAffected(); err != nil {
 		return
 	}
 	data, err = json.Marshal(response)

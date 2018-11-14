@@ -12,7 +12,7 @@ import (
 func CreateAccessGroup(db *sql.DB, params url.Values) (data []byte, err error) {
 	var (
 		result           sql.Result
-		response         = SQLResponse{Rows: 0}
+		response         = SQLResponse{}
 		tx               *sql.Tx
 		name             string
 		organizationName string
@@ -35,7 +35,7 @@ func CreateAccessGroup(db *sql.DB, params url.Values) (data []byte, err error) {
 	if err = tx.Commit(); err != nil {
 		return
 	}
-	if response.Rows, err = result.RowsAffected(); err != nil {
+	if response.AffectedRows, err = result.RowsAffected(); err != nil {
 		return
 	}
 	data, err = json.Marshal(response)
@@ -46,7 +46,7 @@ func CreateAccessGroup(db *sql.DB, params url.Values) (data []byte, err error) {
 func DeleteAccessGroup(db *sql.DB, params url.Values) (data []byte, err error) {
 	var (
 		result           sql.Result
-		response         = SQLResponse{Rows: 0}
+		response         = SQLResponse{}
 		tx               *sql.Tx
 		name             string
 		organizationName string
@@ -68,7 +68,7 @@ func DeleteAccessGroup(db *sql.DB, params url.Values) (data []byte, err error) {
 	if err = tx.Commit(); err != nil {
 		return
 	}
-	if response.Rows, err = result.RowsAffected(); err != nil {
+	if response.AffectedRows, err = result.RowsAffected(); err != nil {
 		return
 	}
 	data, err = json.Marshal(response)
@@ -79,7 +79,7 @@ func DeleteAccessGroup(db *sql.DB, params url.Values) (data []byte, err error) {
 func AddUserToAccessGroup(db *sql.DB, params url.Values) (data []byte, err error) {
 	var (
 		result                      sql.Result
-		response                    = SQLResponse{Rows: 0}
+		response                    = SQLResponse{}
 		tx                          *sql.Tx
 		accessGroupName             string
 		accessGroupOrganizationName string
@@ -106,7 +106,7 @@ func AddUserToAccessGroup(db *sql.DB, params url.Values) (data []byte, err error
 	if err = tx.Commit(); err != nil {
 		return
 	}
-	if response.Rows, err = result.RowsAffected(); err != nil {
+	if response.AffectedRows, err = result.RowsAffected(); err != nil {
 		return
 	}
 	data, err = json.Marshal(response)
@@ -117,7 +117,7 @@ func AddUserToAccessGroup(db *sql.DB, params url.Values) (data []byte, err error
 func RemoveUserFromAccessGroup(db *sql.DB, params url.Values) (data []byte, err error) {
 	var (
 		result                      sql.Result
-		response                    = SQLResponse{Rows: 0}
+		response                    = SQLResponse{}
 		tx                          *sql.Tx
 		accessGroupName             string
 		accessGroupOrganizationName string
@@ -144,7 +144,7 @@ func RemoveUserFromAccessGroup(db *sql.DB, params url.Values) (data []byte, err 
 	if err = tx.Commit(); err != nil {
 		return
 	}
-	if response.Rows, err = result.RowsAffected(); err != nil {
+	if response.AffectedRows, err = result.RowsAffected(); err != nil {
 		return
 	}
 	data, err = json.Marshal(response)

@@ -12,7 +12,7 @@ import (
 // CreateUser creates a new user
 func CreateUser(db *sql.DB, params url.Values) (data []byte, err error) {
 	var (
-		response             = SQLResponse{Rows: 0}
+		response             = SQLResponse{}
 		tx                   *sql.Tx
 		emailAddress         string
 		firstName            string
@@ -56,7 +56,7 @@ func CreateUser(db *sql.DB, params url.Values) (data []byte, err error) {
 		return
 	}
 
-	response.Rows = 1
+	response.AffectedRows = 1
 	data, err = json.Marshal(response)
 	return
 }
@@ -64,9 +64,9 @@ func CreateUser(db *sql.DB, params url.Values) (data []byte, err error) {
 // DeleteUser deletes an user
 func DeleteUser(db *sql.DB, params url.Values) (data []byte, err error) {
 	var (
-		response = SQLResponse{Rows: 0}
-		tx       *sql.Tx
-		emailAddress     string
+		response     = SQLResponse{}
+		tx           *sql.Tx
+		emailAddress string
 	)
 
 	if tx, err = db.Begin(); err != nil {
@@ -83,7 +83,7 @@ func DeleteUser(db *sql.DB, params url.Values) (data []byte, err error) {
 		return
 	}
 
-	response.Rows = 1
+	response.AffectedRows = 1
 	data, err = json.Marshal(response)
 	return
 }

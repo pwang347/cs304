@@ -55,6 +55,7 @@ const styles = theme => ({
     maxWidth: 345,
     display: 'inline-block',
     margin: theme.spacing.unit * 2,
+    disabled: true,
   },
   media: {
     height: 140,
@@ -92,7 +93,7 @@ class ClippedDrawer extends React.Component {
     };
 
     loadServices = () => {
-        var url = BASE_API_URL + "/service/selectAll";
+        var url = BASE_API_URL + "/service/list";
         var self = this;
         fetch(url)
         .then(function(response) {
@@ -196,7 +197,7 @@ class ClippedDrawer extends React.Component {
                 <div className={classes.toolbar} />
                 {this.state.activePageId === "store" && <Typography paragraph>
                 {this.state.services.map(function(service, idx){
-                    return (<Card className={classes.card}>
+                    return (<Card className={classes.card} disabled={true}>
                         <CardActionArea>
                             <CardMedia
                             className={classes.media}

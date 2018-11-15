@@ -19,7 +19,7 @@ func CreateAccessGroup(db *sql.DB, params url.Values) (data []byte, err error) {
 	)
 
 	if tx, err = db.Begin(); err != nil {
-		return nil, err
+		return
 	}
 	if name, err = common.GetRequiredParam(params, "name"); err != nil {
 		return

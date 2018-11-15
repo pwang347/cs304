@@ -87,3 +87,59 @@ func DeleteUser(db *sql.DB, params url.Values) (data []byte, err error) {
 	data, err = json.Marshal(response)
 	return
 }
+
+// SelectUser queries the user table
+func SelectUser(db *sql.DB, params url.Values) (data []byte, err error) {
+	var (
+		response     = SQLResponse{}
+		tx           *sql.Tx
+		emailAddress string
+	)
+
+	if tx, err = db.Begin(); err != nil {
+		return nil, err
+	}
+	if emailAddress, err = common.GetRequiredParam(params, "emailAddress"); err != nil {
+		return
+	}
+	if response.Data, response.AffectedRows, err = common.QueryJSON(tx, "SELECT * FROM User"+
+		"WHERE emailAddress=?;", emailAddress); err != nil {
+		tx.Rollback()
+		return
+	}
+	if err = tx.Commit(); err != nil {
+		return
+	}
+	data, err = json.Marshal(response)
+	return
+}
+
+// UserLogin queries the user table using a password
+func UserLogin(db *sql.DB, params url.Values) (data []byte, err error) {
+	var (
+		response     = SQLResponse{}
+		tx           *sql.Tx
+		emailAddress string
+		passwordHash string
+	)
+
+	if tx, err = db.Begin(); err != nil {
+		return nil, err
+	}
+	if emailAddress, err = common.GetRequiredParam(params, "emailAddress"); err != nil {
+		return
+	}
+	if passwordHash, err = common.GetRequiredParam(params, "passwordHash"); err != nil {
+		return
+	}
+	if response.Data, response.AffectedRows, err = common.QueryJSON(tx, "SELECT * FROM User "+
+		"WHERE emailAddress=? AND passwordHash=?;", emailAddress, passwordHash); err != nil {
+		tx.Rollback()
+		return
+	}
+	if err = tx.Commit(); err != nil {
+		return
+	}
+	data, err = json.Marshal(response)
+	return
+}

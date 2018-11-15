@@ -12,10 +12,13 @@ class App extends Component {
 
     this.state = {
       isLoggedIn: false,
+      organizationId: null,
+      userId: null,
     };
 
     this.login = this.login.bind(this);
     this.logout = this.logout.bind(this);
+    this.setUser = this.setUser.bind(this);
   }
 
   login() {
@@ -23,6 +26,10 @@ class App extends Component {
   }
   logout() {
     this.setState(state => ({ isLoggedIn: false}));
+  }
+
+  setUser(userId) {
+    this.state(state => ({ userId: userId}));
   }
 
   render() {
@@ -37,7 +44,7 @@ class App extends Component {
             </Typography>
           </Toolbar>
         </AppBar>
-        {this.state.isLoggedIn === false && <LoginPage login={this.login}/>}
+        {this.state.isLoggedIn === false && <LoginPage login={this.login} setUser={this.setUser}/>}
         {this.state.isLoggedIn === true && <ClippedDrawer logout={this.logout}/>}
       </div>
     )

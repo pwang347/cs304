@@ -25,7 +25,7 @@ const (
 )
 
 // QueryJSON performs a query operation and returns the results as JSON
-func QueryJSON(tx *sql.Tx, sqlString string, args ...interface{}) (jsonResult string, err error) {
+func QueryJSON(tx *sql.Tx, sqlString string, args ...interface{}) (jsonResult string, numRows int64, err error) {
 	var (
 		rows *sql.Rows
 	)
@@ -43,6 +43,7 @@ func QueryJSON(tx *sql.Tx, sqlString string, args ...interface{}) (jsonResult st
 	values := make([]interface{}, count)
 	valuePtrs := make([]interface{}, count)
 	for rows.Next() {
+		numRows++
 		for i := 0; i < count; i++ {
 			valuePtrs[i] = &values[i]
 		}
@@ -65,6 +66,7 @@ func QueryJSON(tx *sql.Tx, sqlString string, args ...interface{}) (jsonResult st
 	if err != nil {
 		return
 	}
-	fmt.Println(string(jsonData))
-	return string(jsonData), nil
+	jsonResult = string(jsonData)
+	fmt.Println(jsonResult)
+	return
 }

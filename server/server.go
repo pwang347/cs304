@@ -46,7 +46,7 @@ var (
 		"removeUser": queries.RemoveUserFromOrganization,
 	}
 	serviceQueries = map[string]query{
-		"selectAll": queries.QueryAllServices,
+		"list": queries.QueryAllServices,
 	}
 	serviceInstanceQueries = map[string]query{
 		"create": queries.CreateServiceInstance,
@@ -60,6 +60,8 @@ var (
 	userQueries = map[string]query{
 		"create": queries.CreateUser,
 		"delete": queries.DeleteUser,
+		"select": queries.SelectUser,
+		"login":  queries.UserLogin,
 	}
 )
 

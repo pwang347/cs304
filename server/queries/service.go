@@ -18,7 +18,7 @@ func QueryAllServices(db *sql.DB, params url.Values) (data []byte, err error) {
 	if tx, err = db.Begin(); err != nil {
 		return nil, err
 	}
-	if response.Data, err = common.QueryJSON(tx, "SELECT * FROM Service;"); err != nil {
+	if response.Data, response.AffectedRows, err = common.QueryJSON(tx, "SELECT * FROM Service;"); err != nil {
 		tx.Rollback()
 		return
 	}

@@ -27,7 +27,10 @@ class App extends Component {
     this.setState(state => ({ isLoggedIn: true }));
   }
   logout() {
-    this.setState(state => ({ isLoggedIn: false}));
+    this.setState(state => ({
+      isLoggedIn: false,
+      userEmailAddress: null,
+      organizationName: null}));
   }
 
   setUser(userEmailAddress) {

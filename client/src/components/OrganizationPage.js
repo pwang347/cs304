@@ -58,6 +58,9 @@ class OrganizationPage extends React.Component {
               onClose={this.handleClose}
               userEmailAddress={this.props.userEmailAddress}
             />
+            <Button variant="contained" color="primary">
+                Create new organization
+            </Button>
             </main>
           </div>
         );

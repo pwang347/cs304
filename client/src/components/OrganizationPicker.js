@@ -54,7 +54,7 @@ class OrganizationPicker extends React.Component {
   
       return (
         <Dialog onClose={this.handleClose} aria-labelledby="simple-dialog-title" {...other}>
-          <DialogTitle id="simple-dialog-title">Set backup account</DialogTitle>
+          <DialogTitle id="simple-dialog-title">Pick an organization</DialogTitle>
           <div>
             <List>
               {this.state.organizations.map(organization => (

@@ -44,13 +44,15 @@ var (
 		"delete":     queries.DeleteOrganization,
 		"addUser":    queries.AddUserToOrganization,
 		"removeUser": queries.RemoveUserFromOrganization,
+		"listUser":   queries.QueryUserOrganizations,
 	}
 	serviceQueries = map[string]query{
 		"list": queries.QueryAllServices,
 	}
 	serviceInstanceQueries = map[string]query{
-		"create": queries.CreateServiceInstance,
-		"delete": queries.DeleteServiceInstance,
+		"create":           queries.CreateServiceInstance,
+		"delete":           queries.DeleteServiceInstance,
+		"listOrganization": queries.QueryServiceInstanceOrganization,
 	}
 	serviceInstanceConfigurationQueries = map[string]query{
 		"create": queries.CreateServiceInstanceConfiguration,

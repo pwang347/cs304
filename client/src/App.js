@@ -1,6 +1,7 @@
 import React, { Component } from 'react'
 import ClippedDrawer from './components/ClippedDrawer'
 import LoginPage from './components/LoginPage'
+import OrganizationPage from './components/OrganizationPage'
 import AppBar from '@material-ui/core/AppBar';
 import Toolbar from '@material-ui/core/Toolbar';
 import CloudQueueIcon from '@material-ui/icons/CloudQueue';
@@ -12,13 +13,14 @@ class App extends Component {
 
     this.state = {
       isLoggedIn: false,
-      organizationId: null,
-      userId: null,
+      organizationName: null,
+      userEmailAddress: null,
     };
 
     this.login = this.login.bind(this);
     this.logout = this.logout.bind(this);
     this.setUser = this.setUser.bind(this);
+    this.setOrganization = this.setOrganization.bind(this);
   }
 
   login() {
@@ -28,8 +30,12 @@ class App extends Component {
     this.setState(state => ({ isLoggedIn: false}));
   }
 
-  setUser(userId) {
-    this.setState(state => ({ userId: userId}));
+  setUser(userEmailAddress) {
+    this.setState(state => ({ userEmailAddress: userEmailAddress}));
+  }
+
+  setOrganization(organizationName) {
+    this.setState(state => ({ organizationName: organizationName}));
   }
 
   render() {
@@ -45,7 +51,8 @@ class App extends Component {
           </Toolbar>
         </AppBar>
         {this.state.isLoggedIn === false && <LoginPage login={this.login} setUser={this.setUser}/>}
-        {this.state.isLoggedIn === true && <ClippedDrawer logout={this.logout}/>}
+        {(this.state.isLoggedIn === true && this.state.organizationName === null) && <OrganizationPage setOrganization={this.setOrganization} userEmailAddress={this.state.userEmailAddress}/>}
+        {(this.state.isLoggedIn === true && this.state.organizationName !== null) && <ClippedDrawer logout={this.logout} organizationName={this.state.organizationName}/>}
       </div>
     )
   }

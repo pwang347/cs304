@@ -68,16 +68,21 @@ class ClippedDrawer extends React.Component {
       organizationOpen: false,
       activePageId: "store",
       services: [],
+      organizationServiceInstances: [],
     };
 
     componentDidMount() {
         this.loadServices();
+        this.loadOrganizationServiceInstances();
     }
 
     handleClick = (id) => {
         return () => {
             if (id === "store") {
                 this.loadServices();
+            }
+            if (id === "instances") {
+                this.loadOrganizationServiceInstances();
             }
 
             if (id === "service") {
@@ -91,6 +96,23 @@ class ClippedDrawer extends React.Component {
             }
         }
     };
+
+    loadOrganizationServiceInstances = () => {
+        var url = BASE_API_URL + "/serviceInstance/listOrganization?organizationName=" + this.props.organizationName;
+        var self = this;
+        fetch(url)
+        .then(function(response) {
+            if (response.status >= 400) {
+            throw new Error("Bad response from server");
+            }
+            return response.json();
+        })
+        .then(function(json) {
+            self.setState({
+                organizationServiceInstances: JSON.parse(json.data)
+            });
+        });
+    }
 
     loadServices = () => {
         var url = BASE_API_URL + "/service/list";
@@ -225,7 +247,33 @@ class ClippedDrawer extends React.Component {
                 })}
                 </Typography>}
                 {this.state.activePageId === "instances" && <Typography paragraph>
-                Instances page
+                {this.state.organizationServiceInstances.map(function(serviceInstance, idx){
+                    return (<Card className={classes.card} disabled={true}>
+                        <CardActionArea>
+                            <CardMedia
+                            className={classes.media}
+                            image="https://material-ui.com/static/images/cards/contemplative-reptile.jpg"
+                            title="Contemplative Reptile"
+                            />
+                            <CardContent>
+                            <Typography gutterBottom variant="h5" component="h2">
+                                {serviceInstance.name}
+                            </Typography>
+                            <Typography component="p">
+                                {serviceInstance.serviceName}
+                            </Typography>
+                            </CardContent>
+                        </CardActionArea>
+                        <CardActions>
+                            <Button size="small" color="primary">
+                            Share
+                            </Button>
+                            <Button size="small" color="primary">
+                            Learn More
+                            </Button>
+                        </CardActions>
+                    </Card>)
+                })}
                 </Typography>}
                 {this.state.activePageId === "virtual-machines" && <Typography paragraph>
                 Virtual machines page

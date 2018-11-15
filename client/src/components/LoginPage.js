@@ -18,9 +18,6 @@ const styles = theme => ({
         alignItems:'center',
         display: 'flex',
     },
-    item: {
-        marginRight: theme.spacing.unit * 1,
-    }
 });
 
 class LoginPage extends React.Component {

@@ -87,3 +87,29 @@ func DeleteServiceInstance(db *sql.DB, params url.Values) (data []byte, err erro
 	data, err = json.Marshal(response)
 	return
 }
+
+// QueryServiceInstanceOrganization queries from serviceInstance for organization
+func QueryServiceInstanceOrganization(db *sql.DB, params url.Values) (data []byte, err error) {
+	var (
+		response         = SQLResponse{}
+		tx               *sql.Tx
+		organizationName string
+	)
+
+	if tx, err = db.Begin(); err != nil {
+		return nil, err
+	}
+	if organizationName, err = common.GetRequiredParam(params, "organizationName"); err != nil {
+		return
+	}
+	if response.Data, response.AffectedRows, err = common.QueryJSON(tx, "SELECT * FROM ServiceInstance "+
+		"WHERE organizationName = ?;", organizationName); err != nil {
+		tx.Rollback()
+		return
+	}
+	if err = tx.Commit(); err != nil {
+		return
+	}
+	data, err = json.Marshal(response)
+	return
+}

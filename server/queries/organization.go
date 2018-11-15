@@ -146,3 +146,29 @@ func RemoveUserFromOrganization(db *sql.DB, params url.Values) (data []byte, err
 	data, err = json.Marshal(response)
 	return
 }
+
+// QueryUserOrganizations queries all organizations a user belongs to
+func QueryUserOrganizations(db *sql.DB, params url.Values) (data []byte, err error) {
+	var (
+		response         = SQLResponse{}
+		tx               *sql.Tx
+		userEmailAddress string
+	)
+
+	if tx, err = db.Begin(); err != nil {
+		return nil, err
+	}
+	if userEmailAddress, err = common.GetRequiredParam(params, "userEmailAddress"); err != nil {
+		return
+	}
+	if response.Data, response.AffectedRows, err = common.QueryJSON(tx, "SELECT * FROM UserOrganizationPairs "+
+		"WHERE userEmailAddress = ?;", userEmailAddress); err != nil {
+		tx.Rollback()
+		return
+	}
+	if err = tx.Commit(); err != nil {
+		return
+	}
+	data, err = json.Marshal(response)
+	return
+}

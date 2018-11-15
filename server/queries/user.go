@@ -12,6 +12,7 @@ import (
 // CreateUser creates a new user
 func CreateUser(db *sql.DB, params url.Values) (data []byte, err error) {
 	var (
+		result               sql.Result
 		response             = SQLResponse{}
 		tx                   *sql.Tx
 		emailAddress         string
@@ -47,7 +48,7 @@ func CreateUser(db *sql.DB, params url.Values) (data []byte, err error) {
 	if twoFactorPhoneNumber, err = common.GetRequiredParam(params, "twoFactorPhoneNumber"); err != nil {
 		return
 	}
-	if _, err = tx.Exec("INSERT INTO User (emailAddress,firstName,lastName,passwordHash,isAdmin,twoFactorPhoneNumber) VALUES(?,?,?,?,?,?);",
+	if result, err = tx.Exec("INSERT INTO User (emailAddress,firstName,lastName,passwordHash,isAdmin,twoFactorPhoneNumber) VALUES(?,?,?,?,?,?);",
 		emailAddress, firstName, lastName, passwordHash, isAdmin, twoFactorPhoneNumber); err != nil {
 		tx.Rollback()
 		return
@@ -55,8 +56,9 @@ func CreateUser(db *sql.DB, params url.Values) (data []byte, err error) {
 	if err = tx.Commit(); err != nil {
 		return
 	}
-
-	response.AffectedRows = 1
+	if response.AffectedRows, err = result.RowsAffected(); err != nil {
+		return
+	}
 	data, err = json.Marshal(response)
 	return
 }
@@ -64,6 +66,7 @@ func CreateUser(db *sql.DB, params url.Values) (data []byte, err error) {
 // DeleteUser deletes an user
 func DeleteUser(db *sql.DB, params url.Values) (data []byte, err error) {
 	var (
+		result       sql.Result
 		response     = SQLResponse{}
 		tx           *sql.Tx
 		emailAddress string
@@ -75,15 +78,16 @@ func DeleteUser(db *sql.DB, params url.Values) (data []byte, err error) {
 	if emailAddress, err = common.GetRequiredParam(params, "emailAddress"); err != nil {
 		return
 	}
-	if _, err = tx.Exec("DELETE FROM User WHERE emailAddress=?;", emailAddress); err != nil {
+	if result, err = tx.Exec("DELETE FROM User WHERE emailAddress=?;", emailAddress); err != nil {
 		tx.Rollback()
 		return
 	}
 	if err = tx.Commit(); err != nil {
 		return
 	}
-
-	response.AffectedRows = 1
+	if response.AffectedRows, err = result.RowsAffected(); err != nil {
+		return
+	}
 	data, err = json.Marshal(response)
 	return
 }

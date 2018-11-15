@@ -29,7 +29,7 @@ class App extends Component {
   }
 
   setUser(userId) {
-    this.state(state => ({ userId: userId}));
+    this.setState(state => ({ userId: userId}));
   }
 
   render() {

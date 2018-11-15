@@ -69,11 +69,13 @@ class ClippedDrawer extends React.Component {
       activePageId: "store",
       services: [],
       organizationServiceInstances: [],
+      organizationVirtualMachines: [],
     };
 
     componentDidMount() {
         this.loadServices();
         this.loadOrganizationServiceInstances();
+        this.loadOrganizationVirtualMachines();
     }
 
     handleClick = (id) => {
@@ -83,6 +85,9 @@ class ClippedDrawer extends React.Component {
             }
             if (id === "instances") {
                 this.loadOrganizationServiceInstances();
+            }
+            if (id === "virtual-machines") {
+                this.loadOrganizationVirtualMachines();
             }
 
             if (id === "service") {
@@ -110,6 +115,23 @@ class ClippedDrawer extends React.Component {
         .then(function(json) {
             self.setState({
                 organizationServiceInstances: JSON.parse(json.data)
+            });
+        });
+    }
+
+    loadOrganizationVirtualMachines = () => {
+        var url = BASE_API_URL + "/serviceInstance/listOrganization?organizationName=" + this.props.organizationName;
+        var self = this;
+        fetch(url)
+        .then(function(response) {
+            if (response.status >= 400) {
+            throw new Error("Bad response from server");
+            }
+            return response.json();
+        })
+        .then(function(json) {
+            self.setState({
+                organizationVirtualMachines: JSON.parse(json.data)
             });
         });
     }
@@ -276,7 +298,33 @@ class ClippedDrawer extends React.Component {
                 })}
                 </Typography>}
                 {this.state.activePageId === "virtual-machines" && <Typography paragraph>
-                Virtual machines page
+                {this.state.organizationVirtualMachines.map(function(virtualMachines, idx){
+                    return (<Card className={classes.card} disabled={true}>
+                        <CardActionArea>
+                            <CardMedia
+                            className={classes.media}
+                            image="https://material-ui.com/static/images/cards/contemplative-reptile.jpg"
+                            title="Contemplative Reptile"
+                            />
+                            <CardContent>
+                            <Typography gutterBottom variant="h5" component="h2">
+                                {virtualMachines.name}
+                            </Typography>
+                            <Typography component="p">
+                                {virtualMachines.serviceName}
+                            </Typography>
+                            </CardContent>
+                        </CardActionArea>
+                        <CardActions>
+                            <Button size="small" color="primary">
+                            Share
+                            </Button>
+                            <Button size="small" color="primary">
+                            Learn More
+                            </Button>
+                        </CardActions>
+                    </Card>)
+                })}
                 </Typography>}
                 {this.state.activePageId === "billing" && <Typography paragraph>
                 Billing page

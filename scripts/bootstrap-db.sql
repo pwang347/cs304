@@ -206,9 +206,11 @@ CREATE TABLE ServiceSubscription
 (
     type INT,
     serviceName VARCHAR(255),
+    organizationName VARCHAR(255),
     description VARCHAR(255),
+    activeUntil TIMESTAMP,
     PRIMARY KEY (type, serviceName),
-    FOREIGN KEY (serviceName) REFERENCES Service(name)
+    FOREIGN KEY (organizationName) REFERENCES Organization(name)
         ON DELETE CASCADE
         ON UPDATE CASCADE
 );
@@ -248,21 +250,6 @@ CREATE TABLE Transaction
         ON DELETE NO ACTION
         ON UPDATE CASCADE,
     FOREIGN KEY (organizationName) REFERENCES Organization(name)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE
-);
-
-CREATE TABLE OrganizationServiceSubscriptionPairs
-(
-    organizationName VARCHAR(255),
-    serviceSubscriptionType INT,
-    serviceSubscriptionServiceName VARCHAR(255),
-    activeUntil TIMESTAMP,
-    PRIMARY KEY (organizationName, serviceSubscriptionType, serviceSubscriptionServiceName),
-    FOREIGN KEY (organizationName) REFERENCES Organization(name)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE,
-    FOREIGN KEY (serviceSubscriptionType, serviceSubscriptionServiceName) REFERENCES ServiceSubscription(type, serviceName)
         ON DELETE CASCADE
         ON UPDATE CASCADE
 );

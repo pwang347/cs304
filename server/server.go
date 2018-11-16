@@ -59,6 +59,10 @@ var (
 		"delete": queries.DeleteServiceInstanceConfiguration,
 		"update": queries.UpdateServiceInstanceConfiguration,
 	}
+	serviceSubscriptionQueries = map[string]query{
+		"create": queries.CreateServiceSubscription,
+		"delete": queries.DeleteServiceSubscription,
+	}
 	userQueries = map[string]query{
 		"create": queries.CreateUser,
 		"delete": queries.DeleteUser,
@@ -141,6 +145,7 @@ func main() {
 	r.HandleFunc("/api/service/{query}", mapJSONEndpoints(serviceQueries))
 	r.HandleFunc("/api/serviceInstance/{query}", mapJSONEndpoints(serviceInstanceQueries))
 	r.HandleFunc("/api/serviceInstanceConfiguration/{query}", mapJSONEndpoints(serviceInstanceConfigurationQueries))
+	r.HandleFunc("/api/serviceSubscription/{query}", mapJSONEndpoints(serviceSubscriptionQueries))
 	r.HandleFunc("/api/user/{query}", mapJSONEndpoints(userQueries))
 	http.Handle("/", r)
 

@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"net/url"
-	"strconv"
 
 	"github.com/pwang347/cs304/server/common"
 )
@@ -16,8 +15,6 @@ func CreateOrganization(db *sql.DB, params url.Values) (data []byte, err error) 
 		response            = SQLResponse{}
 		tx                  *sql.Tx
 		name                string
-		createdTimestampStr string
-		createdTimestamp    int
 		contactEmailAddress string
 	)
 
@@ -27,17 +24,11 @@ func CreateOrganization(db *sql.DB, params url.Values) (data []byte, err error) 
 	if name, err = common.GetRequiredParam(params, "name"); err != nil {
 		return
 	}
-	if createdTimestampStr, err = common.GetRequiredParam(params, "createdTimestamp"); err != nil {
-		return
-	}
-	if createdTimestamp, err = strconv.Atoi(createdTimestampStr); err != nil {
-		return
-	}
 	if contactEmailAddress, err = common.GetRequiredParam(params, "contactEmailAddress"); err != nil {
 		return
 	}
-	if result, err = tx.Exec("INSERT INTO Organization (name,createdTimestamp,contactEmailAddress) VALUES(?,?,?);",
-		name, createdTimestamp, contactEmailAddress); err != nil {
+	if result, err = tx.Exec("INSERT INTO Organization (name,createdTimestamp,contactEmailAddress) VALUES(?,NOW(),?);",
+		name, contactEmailAddress); err != nil {
 		tx.Rollback()
 		return
 	}

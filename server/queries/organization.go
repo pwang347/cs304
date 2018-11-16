@@ -16,6 +16,7 @@ func CreateOrganization(db *sql.DB, params url.Values) (data []byte, err error) 
 		tx                  *sql.Tx
 		name                string
 		contactEmailAddress string
+		tmpRowsAffected     int64
 	)
 
 	if tx, err = db.Begin(); err != nil {
@@ -32,12 +33,21 @@ func CreateOrganization(db *sql.DB, params url.Values) (data []byte, err error) 
 		tx.Rollback()
 		return
 	}
+	if result, err = tx.Exec("INSERT INTO UserOrganizationPairs (organizationName,userEmailAddress) VALUES(?,?);",
+		name, contactEmailAddress); err != nil {
+		return
+	}
+	if tmpRowsAffected, err = result.RowsAffected(); err != nil {
+		return
+	}
+	response.AffectedRows += tmpRowsAffected
 	if err = tx.Commit(); err != nil {
 		return
 	}
-	if response.AffectedRows, err = result.RowsAffected(); err != nil {
+	if tmpRowsAffected, err = result.RowsAffected(); err != nil {
 		return
 	}
+	response.AffectedRows += tmpRowsAffected
 	data, err = json.Marshal(response)
 	return
 }

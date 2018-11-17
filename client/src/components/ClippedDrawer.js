@@ -40,6 +40,7 @@ import TableRow from '@material-ui/core/TableRow';
 import ViewServiceInstanceDialog from './ViewServiceInstanceDialog';
 import ConfirmationDialog from './ConfirmationDialog';
 import CollectionPicker from './CollectionPicker';
+import CreationDialog from './CreationDialog';
 
 const drawerWidth = 300;
 
@@ -95,6 +96,7 @@ class ClippedDrawer extends React.Component {
         serviceInstancesMap: {},
         accessGroupsMap: {},
         confirmationDialog: null,
+        creationDialog: null,
         addingToGroup: null,
     };
 
@@ -389,6 +391,103 @@ class ClippedDrawer extends React.Component {
         this.setState({addingToGroup: null});
     }
 
+    handleCloseForDeleteAccessGroup = (accessGroupName, result) => {
+        this.setState(state => ({
+            confirmationDialog: null,
+        }));
+        if (!result) return;
+        this.setState(state => ({deleteAccessGroupConfirmed: false}));
+        var url = BASE_API_URL + "/accessGroup/delete?name=" + accessGroupName
+        + "&organizationName=" + this.props.organizationName;
+        var self = this;
+        fetch(url)
+            .then(function (response) {
+                if (response.status >= 400) {
+                    throw new Error("Bad response from server");
+                }
+                return response.json();
+            })
+            .then(function (json) {
+                if (json.affectedRows !== 1) {
+                    throw new Error("Nothing to delete on server");
+                }
+        });
+        var index = this.state.organizationAccessGroups.map(g => g.name).indexOf(accessGroupName);
+        if (index > -1) {
+            this.state.organizationAccessGroups.splice(index, 1);
+        }
+        delete this.state.accessGroupsMap[accessGroupName];
+    }
+
+    handleDeleteAccessGroup = (accessGroupName) => {
+        if (this.state.confirmationDialog === null && !this.state.deleteAccessGroupConfirmed) {
+            this.setState(state => ({confirmationDialog: {
+                titleText: "Are you sure you want to delete " + accessGroupName + "?",
+                contentText: "This action cannot be reversed.",
+                yesText: "Yes",
+                noText: "No",
+                onClose: this.handleCloseForDeleteAccessGroup.bind(undefined, accessGroupName)
+            }}));
+            return;
+        }
+    }
+
+    handleCloseForCreateAccessGroup = (result) => {
+        this.setState(state => ({
+            creationDialog: null,
+        }));
+        if (!result) return;
+        var url = BASE_API_URL + "/accessGroup/create?name=" + result.Name
+        + "&organizationName=" + this.props.organizationName;
+        var self = this;
+        fetch(url)
+            .then(function (response) {
+                if (response.status >= 400) {
+                    throw new Error("Bad response from server");
+                }
+                return response.json();
+            })
+            .then(function(json) {
+                if (json.hasOwnProperty("error")) {
+                    throw new Error(json.error);
+                }
+                if (json.affectedRows !== 1) {
+                    throw new Error("Could not add access group.");
+                }
+                self.state.accessGroupsMap[result.Name] = [];
+                var insertIdx = 0;
+                for (var i = 0; i<self.state.organizationAccessGroups.length; i++){
+                    insertIdx = i;
+                    if (self.state.organizationAccessGroups[i].name.toLowerCase() > result.Name.toLowerCase()) {
+                        console.log(self.state.organizationAccessGroups[i].name)
+                        console.log(self.state.organizationAccessGroups[i].name < result.Name)
+                        break;
+                    }
+                    if (i === self.state.organizationAccessGroups.length - 1) {
+                        insertIdx++;
+                    }
+                }
+                if (insertIdx === self.state.organizationAccessGroups.length) {
+                    self.state.organizationAccessGroups.push({name: result.Name});
+                } else {
+                    self.state.organizationAccessGroups.splice(insertIdx, 0, {name: result.Name});
+                }
+                
+                console.log(self.state.organizationAccessGroups);
+                self.setState(state => ({organizationAccessGroups: self.state.organizationAccessGroups}));
+                // Trigger update
+                self.setState(state => ({accessGroupsMap: self.state.accessGroupsMap}));
+            });
+    }
+
+    handleCreateAccessGroup = () => {
+        this.setState(state => ({creationDialog: {
+            titleText: "Create a new access group",
+            fields: ["Name"],
+            onClose: this.handleCloseForCreateAccessGroup.bind(undefined),
+        }}));
+    }
+
     render() {
         const {classes} = this.props;
 
@@ -643,8 +742,11 @@ class ClippedDrawer extends React.Component {
                         {this.state.organizationAccessGroups.map(function (accessGroup, idx) {
                         return (
                             <div key={accessGroup.name}>
-                            <Typography variant="headline" gutterBottom>{accessGroup.name}</Typography>
-                            <Paper className={classes.accessGroup}>
+                            <div>
+                            <Typography variant="headline">{accessGroup.name}</Typography>
+                            <Button onClick={this.handleDeleteAccessGroup.bind(this, accessGroup.name)}>Delete</Button>
+                            </div>
+                            <Paper className={classes.accessGroup}> 
                                 <List>
                                 {(this.state.accessGroupsMap[accessGroup.name] || []).map(function (userEmailAddress, idx){
                                     return (
@@ -664,6 +766,9 @@ class ClippedDrawer extends React.Component {
                                 </List>
                             </Paper>
                             </div>)}.bind(this))}
+                            <Button variant="contained" color="primary" onClick={this.handleCreateAccessGroup}>
+                                Create new access group
+                            </Button>
                     </div>}
                     {this.state.activePageId === "my-profile" && <Typography paragraph>
                         <Button onClick={this.handleClickChangeOrganization}>
@@ -678,6 +783,8 @@ class ClippedDrawer extends React.Component {
                     {this.state.confirmationDialog !== null &&
                     <ConfirmationDialog dialog={this.state.confirmationDialog}/>
                     }
+                    {this.state.creationDialog !== null &&
+                    <CreationDialog dialog={this.state.creationDialog}/>}
                     <CollectionPicker  titleText="Select a user"
                         open={this.state.addingToGroup !== null}
                         onClose={this.handleAddingToGroupClose.bind(this)}

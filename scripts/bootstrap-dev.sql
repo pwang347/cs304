@@ -1,0 +1,20 @@
+USE cs304;
+
+INSERT INTO User (emailAddress, firstName, lastName, passwordHash, isAdmin, twoFactorPhoneNumber) VALUES ("a", "Bob", "Joe", "b", 1, "6041234567");
+INSERT INTO `Organization` (`name`, `createdTimestamp`, `contactEmailAddress`) VALUES ('Macrohard', '2018-11-15 15:32:50', 'a');
+INSERT INTO `Organization` (`name`, `createdTimestamp`, `contactEmailAddress`) VALUES ('test', '2018-11-15 18:28:01', 'a');
+INSERT INTO `Organization` (`name`, `createdTimestamp`, `contactEmailAddress`) VALUES ('test2', '2018-11-15 18:34:37', 'a');
+INSERT INTO `Organization` (`name`, `createdTimestamp`, `contactEmailAddress`) VALUES ('asd', '2018-11-15 18:35:50', 'a');
+INSERT INTO `Organization` (`name`, `createdTimestamp`, `contactEmailAddress`) VALUES ('asdsad', '2018-11-15 18:37:26', 'a');
+INSERT INTO `Organization` (`name`, `createdTimestamp`, `contactEmailAddress`) VALUES ('asdasf', '2018-11-15 20:20:08', 'a');
+INSERT INTO `UserOrganizationPairs` (`organizationName`, `userEmailAddress`) VALUES ('asdasf', 'a');
+INSERT INTO `UserOrganizationPairs` (`organizationName`, `userEmailAddress`) VALUES ('Macrohard', 'a');
+INSERT INTO `Service` (`name`, `description`, `isPreview`, `isEnabled`, `isVirtualMachineService`) VALUES ('EC2', 'This is some cool stuff', 0, 1, 1);
+INSERT INTO `Service` (`name`, `description`, `isPreview`, `isEnabled`, `isVirtualMachineService`) VALUES ('S3', 'ASdasdasd', 0, 1, 0);
+INSERT INTO `Service` (`name`, `description`, `isPreview`, `isEnabled`, `isVirtualMachineService`) VALUES ('Compute', 'asdasdasd', 1, 1, 0);
+INSERT INTO `BaseImage` (`os`, `version`) VALUES ('Ubuntu', '14.03');
+INSERT INTO `Region` (`name`) VALUES ('us-west');
+INSERT INTO `VirtualMachine` (`description`, `ipAddress`, `state`, `cores`, `diskSpace`, `ram`, `baseImageOs`, `baseImageVersion`, `regionName`, `organizationName`, `virtualMachineServiceName`) VALUES ('Nobody toucha mah spaghet!', '0.0.0.0', 1, 2, 3, 4, 'Ubuntu', '14.03', 'us-west', 'Macrohard', 'S3');
+INSERT INTO `ServiceInstance` (`name`, `regionName`, `serviceName`, `organizationName`) VALUES ('s1', 'us-west', 'S3', 'Macrohard');
+INSERT INTO `ServiceInstanceKey` (`keyValue`, `activeUntil`, `serviceInstanceName`, `serviceInstanceServiceName`, `serviceInstanceOrganizationName`) VALUES ('asfas123213', '2018-11-16 17:48:49', 's1', 'S3', 'Macrohard');
+INSERT INTO `ServiceInstanceConfiguration` (`configKey`, `serviceInstanceName`, `serviceInstanceServiceName`, `serviceInstanceOrganizationName`, `data`) VALUES ('PORT', 's1', 'S3', 'Macrohard', '8080');

@@ -54,11 +54,11 @@ class OrganizationPicker extends React.Component {
   
       return (
         <Dialog onClose={this.handleClose} aria-labelledby="simple-dialog-title" {...other}>
-          <DialogTitle id="simple-dialog-title">Pick an organization</DialogTitle>
+          <DialogTitle>Pick an organization</DialogTitle>
           <div>
             <List>
               {this.state.organizations.map(organization => (
-                <ListItem button onClick={() => this.handleListItemClick(organization.organizationName)} key={organization}>
+                <ListItem button onClick={() => this.handleListItemClick(organization.organizationName)} key={organization.organizationName}>
                   <ListItemText primary={organization.organizationName} />
                 </ListItem>
               ))}

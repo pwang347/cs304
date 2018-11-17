@@ -70,6 +70,7 @@ CREATE TABLE Service
     isPreview BOOLEAN,
     isEnabled BOOLEAN,
     isVirtualMachineService BOOLEAN,
+    imageUrl VARCHAR(255),
     PRIMARY KEY (name)
 );
 

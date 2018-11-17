@@ -55,15 +55,27 @@ var (
 		"listOrganization": queries.QueryServiceInstanceOrganization,
 	}
 	serviceInstanceConfigurationQueries = map[string]query{
-		"create": queries.CreateServiceInstanceConfiguration,
-		"delete": queries.DeleteServiceInstanceConfiguration,
-		"update": queries.UpdateServiceInstanceConfiguration,
+		"create":                 queries.CreateServiceInstanceConfiguration,
+		"delete":                 queries.DeleteServiceInstanceConfiguration,
+		"update":                 queries.UpdateServiceInstanceConfiguration,
+		"listForServiceInstance": queries.QueryServiceInstanceConfigurations,
+	}
+	serviceInstanceKeyQueries = map[string]query{
+		"create":                 queries.CreateServiceInstanceKey,
+		"delete":                 queries.DeleteServiceInstanceKey,
+		"update":                 queries.UpdateServiceInstanceKey,
+		"listForServiceInstance": queries.QueryServiceInstanceKeys,
 	}
 	serviceSubscriptionQueries = map[string]query{
 		"create": queries.CreateServiceSubscriptionTransaction,
 		"delete": queries.DeleteServiceSubscriptionTransactionByTransaction,
 		"listActiveSubscriptions": queries.ListAllActiveServiceSubscriptionTransactions,
 		"listTransactions": queries.ListAllCompletedTransactions,
+	}
+	virtualMachineQueries = map[string]query{
+		"create":           queries.CreateVirtualMachine,
+		"delete":           queries.DeleteVirtualMachine,
+		"listOrganization": queries.QueryVirtualMachineOrganization,
 	}
 	userQueries = map[string]query{
 		"create": queries.CreateUser,
@@ -147,7 +159,9 @@ func main() {
 	r.HandleFunc("/api/service/{query}", mapJSONEndpoints(serviceQueries))
 	r.HandleFunc("/api/serviceInstance/{query}", mapJSONEndpoints(serviceInstanceQueries))
 	r.HandleFunc("/api/serviceInstanceConfiguration/{query}", mapJSONEndpoints(serviceInstanceConfigurationQueries))
+	r.HandleFunc("/api/serviceInstanceKey/{query}", mapJSONEndpoints(serviceInstanceKeyQueries))
 	r.HandleFunc("/api/serviceSubscriptionTransaction/{query}", mapJSONEndpoints(serviceSubscriptionQueries))
+	r.HandleFunc("/api/virtualMachine/{query}", mapJSONEndpoints(virtualMachineQueries))
 	r.HandleFunc("/api/user/{query}", mapJSONEndpoints(userQueries))
 	http.Handle("/", r)
 

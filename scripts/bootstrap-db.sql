@@ -209,10 +209,10 @@ CREATE TABLE ServiceSubscriptionTransaction
     serviceName VARCHAR(255),
     organizationName VARCHAR(255),
     description VARCHAR(255),
-    activeUntil TIMESTAMP,
+    activeUntil DATETIME,
     transactionNumber INT,
     amountPaid INT,
-    processedTimestamp TIMESTAMP,
+    processedTimestamp DATETIME,
     PRIMARY KEY (transactionNumber, organizationName),
     UNIQUE (type, serviceName, organizationName),
     FOREIGN KEY (organizationName) REFERENCES Organization(name)

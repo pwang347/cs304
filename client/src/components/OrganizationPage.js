@@ -6,7 +6,7 @@ import { BASE_API_URL } from "../config";
 import Typography from '@material-ui/core/Typography';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
-import OrganizationPicker from './OrganizationPicker';
+import CollectionPicker from './CollectionPicker';
 
 const styles = theme => ({
     root: {
@@ -42,8 +42,11 @@ class OrganizationPage extends React.Component {
       };
     
     handleClose = value => {
-        this.setState({ selectedValue: value, open: false });
-        this.props.setOrganization(value);
+        console.log(value);
+        this.setState({open: false});
+        if (value) {
+            this.props.setOrganization(value);
+        }
     };
 
     handleCreate = () => {
@@ -88,11 +91,13 @@ class OrganizationPage extends React.Component {
             <List>
                 <ListItem>
                     <Button onClick={this.handleClickOpen}>Select an organization</Button>
-                    <OrganizationPicker
-                        selectedValue={this.state.organizationName}
+                    <CollectionPicker
+                        titleText="Select an organization"
                         open={this.state.open}
-                        onClose={this.handleClose}
-                        userEmailAddress={this.props.userEmailAddress}
+                        onClose={this.handleClose.bind(this)}
+                        dataEndpoint={"/organization/listUser?userEmailAddress=" + this.props.userEmailAddress}
+                        displayfn={(pair) => pair.organizationName}
+                        keyfn={(pair) => pair.organizationName}
                     />
                     <Button variant="contained" color="primary" onClick={this.handleCreate}>
                         Create new organization

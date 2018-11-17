@@ -73,7 +73,7 @@ func DeleteServiceInstance(db *sql.DB, params url.Values) (data []byte, err erro
 	if organizationName, err = common.GetRequiredParam(params, "organizationName"); err != nil {
 		return
 	}
-	if result, err = tx.Exec("DELETE FROM ServiceInstance WHERE name=? AND serviceName=? AND organizationName=? AND;",
+	if result, err = tx.Exec("DELETE FROM ServiceInstance WHERE name=? AND serviceName=? AND organizationName=?;",
 		name, serviceName, organizationName); err != nil {
 		tx.Rollback()
 		return

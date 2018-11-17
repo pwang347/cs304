@@ -28,10 +28,12 @@ const (
 var (
 	db                 *sql.DB
 	accessGroupQueries = map[string]query{
-		"create":     queries.CreateAccessGroup,
-		"delete":     queries.DeleteAccessGroup,
-		"addUser":    queries.AddUserToAccessGroup,
-		"removeUser": queries.RemoveUserFromAccessGroup,
+		"create":                   queries.CreateAccessGroup,
+		"delete":                   queries.DeleteAccessGroup,
+		"addUser":                  queries.AddUserToAccessGroup,
+		"removeUser":               queries.RemoveUserFromAccessGroup,
+		"listOrganization":         queries.QueryAccessGroupOrganization,
+		"listUsersForOrganization": queries.QueryAccessGroupUserPairsOrganization,
 	}
 	creditCardQueries = map[string]query{
 		"create":                 queries.CreateCreditCard,
@@ -40,11 +42,12 @@ var (
 		"removeFromOrganization": queries.RemoveCreditCardFromOrganization,
 	}
 	organizationQueries = map[string]query{
-		"create":     queries.CreateOrganization,
-		"delete":     queries.DeleteOrganization,
-		"addUser":    queries.AddUserToOrganization,
-		"removeUser": queries.RemoveUserFromOrganization,
-		"listUser":   queries.QueryUserOrganizations,
+		"create":                            queries.CreateOrganization,
+		"delete":                            queries.DeleteOrganization,
+		"addUser":                           queries.AddUserToOrganization,
+		"removeUser":                        queries.RemoveUserFromOrganization,
+		"listUser":                          queries.QueryUserOrganizations,
+		"listUsersInOrganizationNotInGroup": queries.QueryOrganizationUsers,
 	}
 	serviceQueries = map[string]query{
 		"list": queries.QueryAllServices,
@@ -67,10 +70,10 @@ var (
 		"listForServiceInstance": queries.QueryServiceInstanceKeys,
 	}
 	serviceSubscriptionQueries = map[string]query{
-		"create": queries.CreateServiceSubscriptionTransaction,
-		"delete": queries.DeleteServiceSubscriptionTransactionByTransaction,
+		"create":                  queries.CreateServiceSubscriptionTransaction,
+		"delete":                  queries.DeleteServiceSubscriptionTransactionByTransaction,
 		"listActiveSubscriptions": queries.ListAllActiveServiceSubscriptionTransactions,
-		"listTransactions": queries.ListAllCompletedTransactions,
+		"listTransactions":        queries.ListAllCompletedTransactions,
 	}
 	virtualMachineQueries = map[string]query{
 		"create":           queries.CreateVirtualMachine,

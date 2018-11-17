@@ -162,8 +162,40 @@ func QueryUserOrganizations(db *sql.DB, params url.Values) (data []byte, err err
 	if userEmailAddress, err = common.GetRequiredParam(params, "userEmailAddress"); err != nil {
 		return
 	}
-	if response.Data, response.AffectedRows, err = common.QueryJSON(tx, "SELECT * FROM UserOrganizationPairs "+
-		"WHERE userEmailAddress = ?;", userEmailAddress); err != nil {
+	if response.Data, response.AffectedRows, err = common.QueryJSON(tx, "SELECT * FROM UserOrganizationPairs UOP, Organization O "+
+		"WHERE UOP.organizationName = O.name AND userEmailAddress = ?;", userEmailAddress); err != nil {
+		tx.Rollback()
+		return
+	}
+	if err = tx.Commit(); err != nil {
+		return
+	}
+	data, err = json.Marshal(response)
+	return
+}
+
+// QueryOrganizationUsers queries all users an organization contains
+func QueryOrganizationUsers(db *sql.DB, params url.Values) (data []byte, err error) {
+	var (
+		response         = SQLResponse{}
+		tx               *sql.Tx
+		organizationName string
+		accessGroupName  string
+	)
+
+	if tx, err = db.Begin(); err != nil {
+		return nil, err
+	}
+	if organizationName, err = common.GetRequiredParam(params, "organizationName"); err != nil {
+		return
+	}
+	if accessGroupName, err = common.GetRequiredParam(params, "accessGroupName"); err != nil {
+		return
+	}
+	if response.Data, response.AffectedRows, err = common.QueryJSON(tx, "SELECT * FROM UserOrganizationPairs UOP, User U "+
+		"WHERE UOP.userEmailAddress = U.emailAddress AND UOP.organizationName = ? "+
+		"AND NOT EXISTS (select * from UserAccessGroupPairs UAGP where UAGP.userEmailAddress = U.emailAddress AND UAGP.accessGroupName = ?);",
+		organizationName, accessGroupName); err != nil {
 		tx.Rollback()
 		return
 	}

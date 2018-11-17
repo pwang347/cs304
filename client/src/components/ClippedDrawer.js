@@ -9,6 +9,7 @@ import Divider from '@material-ui/core/Divider';
 import ListItem from '@material-ui/core/ListItem';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
+import ListItemSecondaryAction from '@material-ui/core/ListItemSecondaryAction';
 import DomainIcon from '@material-ui/icons/Domain';
 import ShopIcon from '@material-ui/icons/Shop';
 import PersonIcon from '@material-ui/icons/Person';
@@ -37,6 +38,8 @@ import TableCell from '@material-ui/core/TableCell';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import ViewServiceInstanceDialog from './ViewServiceInstanceDialog';
+import ConfirmationDialog from './ConfirmationDialog';
+import CollectionPicker from './CollectionPicker';
 
 const drawerWidth = 300;
 
@@ -68,6 +71,10 @@ const styles = theme => ({
     media: {
         height: 140,
     },
+    accessGroup: {
+        width: drawerWidth,
+        margin: theme.spacing.unit,
+    },
 });
 
 const defaultImageUrl = "https://material-ui.com/static/images/cards/contemplative-reptile.jpg";
@@ -83,8 +90,12 @@ class ClippedDrawer extends React.Component {
         organizationVirtualMachines: [],
         organizationActiveSubscriptions: [],
         organizationTransactions: [],
+        organizationAccessGroups: [],
         displayedServiceInstance: null,
         serviceInstancesMap: {},
+        accessGroupsMap: {},
+        confirmationDialog: null,
+        addingToGroup: null,
     };
 
     componentDidMount() {
@@ -93,6 +104,8 @@ class ClippedDrawer extends React.Component {
         this.loadOrganizationVirtualMachines();
         this.loadActiveServices();
         this.loadTransactions();
+        this.loadAccessGroups();
+        this.loadAccessGroupUsers();
     }
 
     handleClick = (id) => {
@@ -109,6 +122,10 @@ class ClippedDrawer extends React.Component {
             if (id === "billing") {
                 this.loadActiveServices();
                 this.loadTransactions();
+            }
+            if (id === "access-groups"){
+                this.loadAccessGroups();
+                this.loadAccessGroupUsers();
             }
 
             if (id === "service") {
@@ -199,6 +216,45 @@ class ClippedDrawer extends React.Component {
             });
     }
 
+    loadAccessGroups = () => {
+        var url = BASE_API_URL + "/accessGroup/listOrganization?organizationName=" + this.props.organizationName;
+        var self = this;
+        fetch(url)
+            .then(function (response) {
+                if (response.status >= 400) {
+                    throw new Error("Bad response from server");
+                }
+                return response.json();
+            })
+            .then(function (json) {
+                self.setState({
+                    organizationAccessGroups: JSON.parse(json.data)
+                });
+            });
+    }
+
+    loadAccessGroupUsers = () => {
+        var url = BASE_API_URL + "/accessGroup/listUsersForOrganization?organizationName=" + this.props.organizationName;
+        var self = this;
+        fetch(url)
+            .then(function (response) {
+                if (response.status >= 400) {
+                    throw new Error("Bad response from server");
+                }
+                return response.json();
+            })
+            .then(function (json) {
+                for (var member in self.state.accessGroupsMap) delete self.state.accessGroupsMap[member];
+                var userGroupPairings = JSON.parse(json.data);
+                for (var pairing of userGroupPairings) {
+                    if(!self.state.accessGroupsMap.hasOwnProperty(pairing.accessGroupName)) {
+                        self.state.accessGroupsMap[pairing.accessGroupName] = [];
+                    }
+                    self.state.accessGroupsMap[pairing.accessGroupName].push(pairing.userEmailAddress);
+                }
+            });
+    }
+
     loadServices = () => {
         var url = BASE_API_URL + "/service/list";
         var self = this;
@@ -226,6 +282,111 @@ class ClippedDrawer extends React.Component {
 
     handleServiceInstanceDetailsClose = () => {
         this.setState(state => ({displayedServiceInstance: null}));
+    }
+
+    handleCloseForDeleteServiceInstance = (serviceInstanceName, result) => {
+        this.setState(state => ({
+            confirmationDialog: null,
+        }));
+        if (!result) return;
+        this.setState(state => ({deleteServiceInstanceConfirmed: false}));
+        var serviceInstance = this.state.serviceInstancesMap[serviceInstanceName];
+        var url = BASE_API_URL + "/serviceInstance/delete?name=" + serviceInstance.name
+        + "&serviceName=" + serviceInstance.serviceName
+        + "&organizationName=" + this.props.organizationName;
+        var self = this;
+        fetch(url)
+            .then(function (response) {
+                if (response.status >= 400) {
+                    throw new Error("Bad response from server");
+                }
+                return response.json();
+            })
+            .then(function (json) {
+                if (json.affectedRows !== 1) {
+                    throw new Error("Nothing to delete on server");
+                }
+        });
+        var index = this.state.organizationServiceInstances.indexOf(serviceInstance);
+        if (index > -1) {
+            this.state.organizationServiceInstances.splice(index, 1);
+        }
+        delete this.state.serviceInstancesMap[serviceInstanceName];
+    }
+
+    handleDeleteServiceInstance = (serviceInstanceName) => {
+        if (this.state.confirmationDialog === null && !this.state.deleteServiceInstanceConfirmed) {
+            this.setState(state => ({confirmationDialog: {
+                titleText: "Are you sure you want to delete " + serviceInstanceName + "?",
+                contentText: "This action cannot be reversed.",
+                yesText: "Yes",
+                noText: "No",
+                onClose: this.handleCloseForDeleteServiceInstance.bind(undefined, serviceInstanceName)
+            }}));
+            return;
+        }
+    }
+
+    handleClickChangeOrganization = () => {
+        this.props.setOrganization(null);
+    }
+
+    handleRemoveUserFromAccessGroup = (accessGroupName, userEmailAddress) => {
+        var url = BASE_API_URL + "/accessGroup/removeUser?accessGroupName=" + accessGroupName
+        + "&userEmailAddress=" + userEmailAddress
+        + "&accessGroupOrganizationName=" + this.props.organizationName;
+        var self = this;
+        fetch(url)
+            .then(function (response) {
+                if (response.status >= 400) {
+                    throw new Error("Bad response from server");
+                }
+                return response.json();
+            })
+            .then(function (json) {
+                if (json.affectedRows !== 1) {
+                    throw new Error("Nothing to delete on server");
+                }
+        });
+        var index = this.state.accessGroupsMap[accessGroupName].indexOf(userEmailAddress);
+        if (index > -1) {
+            this.state.accessGroupsMap[accessGroupName].splice(index, 1);
+        }
+        // Trigger update
+        this.setState(state => ({accessGroupsMap: this.state.accessGroupsMap}));
+    }
+
+    handleAddUserToAccessGroup = (accessGroupName) => {
+        this.setState({addingToGroup: accessGroupName});
+    }
+    
+    handleAddingToGroupClose = (value) => {
+        var groupName = this.state.addingToGroup;
+        if (value) {
+            var url = BASE_API_URL + "/accessGroup/addUser?accessGroupName=" + groupName
+            + "&accessGroupOrganizationName=" + this.props.organizationName
+            + "&userEmailAddress=" + value;
+            var self = this;
+            fetch(url)
+            .then(function(response) {
+                return response.json();
+            })
+            .then(function(json) {
+                if (json.hasOwnProperty("error")) {
+                    throw new Error(json.error);
+                }
+                if (json.affectedRows !== 1) {
+                    throw new Error("Could not add user.");
+                }
+                if (!self.state.accessGroupsMap.hasOwnProperty(groupName)) {
+                    self.state.accessGroupsMap[groupName] = [];
+                }
+                self.state.accessGroupsMap[groupName].push(value);
+                // Trigger update
+                self.setState(state => ({accessGroupsMap: self.state.accessGroupsMap}));
+            });
+        }
+        this.setState({addingToGroup: null});
     }
 
     render() {
@@ -377,7 +538,7 @@ class ClippedDrawer extends React.Component {
                                             onClick={this.handleServiceInstanceDetails.bind(this, serviceInstance.name)}>
                                         View details
                                     </Button>
-                                    <Button size="small" color="primary">
+                                    <Button size="small" color="primary" onClick={this.handleDeleteServiceInstance.bind(this, serviceInstance.name)}>
                                         Terminate
                                     </Button>
                                 </CardActions>
@@ -413,7 +574,7 @@ class ClippedDrawer extends React.Component {
                             </Card>)
                         })}
                     </div>}
-                    {this.state.activePageId === "billing" && <Typography paragraph>
+                    {this.state.activePageId === "billing" &&
                         <Grid container spacing={24}>
                             <Grid item xs={12}>
                                 <Typography variant="headline" gutterBottom>Active Subscriptions</Typography>
@@ -475,19 +636,57 @@ class ClippedDrawer extends React.Component {
                                     </Table>
                                 </Paper>
                             </Grid>
-                        </Grid>
-                    </Typography>}
-                    {this.state.activePageId === "access-groups" && <Typography paragraph>
-                        Access groups page
-                    </Typography>}
+                        </Grid>}
+                    {this.state.activePageId === "access-groups" &&
+                    <div>
+                        <Typography variant="headline" gutterBottom>Access groups</Typography>
+                        {this.state.organizationAccessGroups.map(function (accessGroup, idx) {
+                        return (
+                            <div key={accessGroup.name}>
+                            <Typography variant="headline" gutterBottom>{accessGroup.name}</Typography>
+                            <Paper className={classes.accessGroup}>
+                                <List>
+                                {(this.state.accessGroupsMap[accessGroup.name] || []).map(function (userEmailAddress, idx){
+                                    return (
+                                    <ListItem key={accessGroup.name + userEmailAddress}>
+                                    <ListItemIcon>
+                                        <PersonIcon/>
+                                    </ListItemIcon>
+                                    <ListItemSecondaryAction>
+                                        <Button onClick={this.handleRemoveUserFromAccessGroup.bind(this, accessGroup.name, userEmailAddress)}>x</Button>
+                                    </ListItemSecondaryAction>
+                                    <ListItemText inset primary={userEmailAddress}/>
+                                </ListItem>
+                                )}.bind(this))}
+                                <ListItem>
+                                    <Button onClick={this.handleAddUserToAccessGroup.bind(this, accessGroup.name)}>Add user</Button>
+                                </ListItem>
+                                </List>
+                            </Paper>
+                            </div>)}.bind(this))}
+                    </div>}
                     {this.state.activePageId === "my-profile" && <Typography paragraph>
-                        My profile page
+                        <Button onClick={this.handleClickChangeOrganization}>
+                            Change organization
+                        </Button>
                     </Typography>}
                     {this.state.displayedServiceInstance !== null &&
                     <ViewServiceInstanceDialog open={this.state.displayedServiceInstance}
                                                onClose={this.handleServiceInstanceDetailsClose}
                                                serviceInstance={this.state.displayedServiceInstance}/>
-                    }</main>
+                    }
+                    {this.state.confirmationDialog !== null &&
+                    <ConfirmationDialog dialog={this.state.confirmationDialog}/>
+                    }
+                    <CollectionPicker  titleText="Select a user"
+                        open={this.state.addingToGroup !== null}
+                        onClose={this.handleAddingToGroupClose.bind(this)}
+                        dataEndpoint={"/organization/listUsersInOrganizationNotInGroup?organizationName=" + this.props.organizationName
+                                    + "&accessGroupName=" + this.state.addingToGroup}
+                        displayfn={(user) => user.emailAddress}
+                        keyfn={(user) => user.emailAddress}>
+                    </CollectionPicker>
+                    </main>
             </div>
         );
     }

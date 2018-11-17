@@ -13,8 +13,8 @@ class App extends Component {
 
     this.state = {
       isLoggedIn: true,
-      organizationName: "123",
-      userEmailAddress: "test",
+      organizationName: "Macrohard",
+      userEmailAddress: "a",
     };
 
     this.login = this.login.bind(this);
@@ -55,7 +55,7 @@ class App extends Component {
         </AppBar>
         {this.state.isLoggedIn === false && <LoginPage login={this.login} setUser={this.setUser}/>}
         {(this.state.isLoggedIn === true && this.state.organizationName === null) && <OrganizationPage setOrganization={this.setOrganization} userEmailAddress={this.state.userEmailAddress}/>}
-        {(this.state.isLoggedIn === true && this.state.organizationName !== null) && <ClippedDrawer logout={this.logout} organizationName={this.state.organizationName}/>}
+        {(this.state.isLoggedIn === true && this.state.organizationName !== null) && <ClippedDrawer setOrganization={this.setOrganization} logout={this.logout} organizationName={this.state.organizationName}/>}
       </div>
     )
   }

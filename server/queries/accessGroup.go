@@ -150,3 +150,55 @@ func RemoveUserFromAccessGroup(db *sql.DB, params url.Values) (data []byte, err 
 	data, err = json.Marshal(response)
 	return
 }
+
+// QueryAccessGroupOrganization queries from AccessGroup for organization
+func QueryAccessGroupOrganization(db *sql.DB, params url.Values) (data []byte, err error) {
+	var (
+		response         = SQLResponse{}
+		tx               *sql.Tx
+		organizationName string
+	)
+
+	if tx, err = db.Begin(); err != nil {
+		return nil, err
+	}
+	if organizationName, err = common.GetRequiredParam(params, "organizationName"); err != nil {
+		return
+	}
+	if response.Data, response.AffectedRows, err = common.QueryJSON(tx, "SELECT * FROM AccessGroup "+
+		"WHERE organizationName = ?;", organizationName); err != nil {
+		tx.Rollback()
+		return
+	}
+	if err = tx.Commit(); err != nil {
+		return
+	}
+	data, err = json.Marshal(response)
+	return
+}
+
+// QueryAccessGroupUserPairsOrganization queries user and access group pairings for organization
+func QueryAccessGroupUserPairsOrganization(db *sql.DB, params url.Values) (data []byte, err error) {
+	var (
+		response         = SQLResponse{}
+		tx               *sql.Tx
+		organizationName string
+	)
+
+	if tx, err = db.Begin(); err != nil {
+		return nil, err
+	}
+	if organizationName, err = common.GetRequiredParam(params, "organizationName"); err != nil {
+		return
+	}
+	if response.Data, response.AffectedRows, err = common.QueryJSON(tx, "SELECT * FROM UserAccessGroupPairs "+
+		"WHERE accessGroupOrganizationName = ?;", organizationName); err != nil {
+		tx.Rollback()
+		return
+	}
+	if err = tx.Commit(); err != nil {
+		return
+	}
+	data, err = json.Marshal(response)
+	return
+}

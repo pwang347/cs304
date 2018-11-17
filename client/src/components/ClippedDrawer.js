@@ -1044,15 +1044,15 @@ class ClippedDrawer extends React.Component {
                                     </CardContent>
                                 </CardActionArea>
                                 <CardActions>
-                                    <Button size="small" color="primary">
+                                    <Button size="small" color="primary" onClick={this.handleVirtualMachineDetails.bind(this, virtualMachine.ipAddress)}>
                                         View details
                                     </Button>
-                                    <Button size="small" color="primary">
+                                    <Button size="small" color="primary" onClick={this.handleDeleteVirtualMachine.bind(this, virtualMachine.ipAddress)}>
                                         Terminate
                                     </Button>
                                 </CardActions>
                             </Card>)
-                        })}
+                        }.bind(this))}
                     </div>}
                     {this.state.activePageId === "billing" &&
                         <Grid container spacing={24}>

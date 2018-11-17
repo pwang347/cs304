@@ -94,6 +94,7 @@ func QueryServiceInstanceOrganization(db *sql.DB, params url.Values) (data []byt
 		response         = SQLResponse{}
 		tx               *sql.Tx
 		organizationName string
+		serviceName      string
 	)
 
 	if tx, err = db.Begin(); err != nil {
@@ -102,8 +103,11 @@ func QueryServiceInstanceOrganization(db *sql.DB, params url.Values) (data []byt
 	if organizationName, err = common.GetRequiredParam(params, "organizationName"); err != nil {
 		return
 	}
+	if serviceName, err = common.GetRequiredParam(params, "serviceName"); err != nil {
+		return
+	}
 	if response.Data, response.AffectedRows, err = common.QueryJSON(tx, "SELECT * FROM ServiceInstance "+
-		"WHERE organizationName = ?;", organizationName); err != nil {
+		"WHERE organizationName = ? AND serviceName = ?;", organizationName, serviceName); err != nil {
 		tx.Rollback()
 		return
 	}

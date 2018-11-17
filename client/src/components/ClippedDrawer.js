@@ -41,6 +41,7 @@ import ViewServiceInstanceDialog from './ViewServiceInstanceDialog';
 import ConfirmationDialog from './ConfirmationDialog';
 import CollectionPicker from './CollectionPicker';
 import CreationDialog from './CreationDialog';
+import PlayArrow from '@material-ui/icons/PlayArrow';
 
 const drawerWidth = 300;
 
@@ -64,6 +65,9 @@ const styles = theme => ({
     nested: {
         paddingLeft: theme.spacing.unit * 4,
     },
+    nestedTwice: {
+        paddingLeft: theme.spacing.unit * 8,
+    },
     card: {
         width: 300,
         display: 'inline-block',
@@ -84,7 +88,9 @@ class ClippedDrawer extends React.Component {
     state = {
         serviceOpen: true,
         organizationOpen: false,
+        myServicesOpen: false,
         activePageId: "store",
+        activeServiceName: null,
         services: [],
         servicesMap: {},
         organizationServiceInstances: [],
@@ -92,6 +98,7 @@ class ClippedDrawer extends React.Component {
         organizationActiveSubscriptions: [],
         organizationTransactions: [],
         organizationAccessGroups: [],
+        activeSubscriptionsMap: {},
         displayedServiceInstance: null,
         serviceInstancesMap: {},
         accessGroupsMap: {},
@@ -102,7 +109,6 @@ class ClippedDrawer extends React.Component {
 
     componentDidMount() {
         this.loadServices();
-        this.loadOrganizationServiceInstances();
         this.loadOrganizationVirtualMachines();
         this.loadActiveServices();
         this.loadTransactions();
@@ -110,13 +116,13 @@ class ClippedDrawer extends React.Component {
         this.loadAccessGroupUsers();
     }
 
-    handleClick = (id) => {
+    handleClick = (id, data) => {
         return () => {
             if (id === "store") {
                 this.loadServices();
             }
             if (id === "instances") {
-                this.loadOrganizationServiceInstances();
+                this.loadOrganizationServiceInstances(data);
             }
             if (id === "virtual-machines") {
                 this.loadOrganizationVirtualMachines();
@@ -136,6 +142,9 @@ class ClippedDrawer extends React.Component {
             else if (id === "organization") {
                 this.setState(state => ({organizationOpen: !state.organizationOpen}));
             }
+            else if (id === "my-services") {
+                this.setState(state => ({myServicesOpen: !state.myServicesOpen}));
+            }
             else {
                 this.setState(state => ({activePageId: id}));
             }
@@ -154,9 +163,13 @@ class ClippedDrawer extends React.Component {
             })
             .then(function (json) {
                 if (json.affectedRows > 0) {
+                    var organizationActiveSubscriptions =  JSON.parse(json.data);
                     self.setState({
-                        organizationActiveSubscriptions: JSON.parse(json.data)
+                        organizationActiveSubscriptions: organizationActiveSubscriptions
                     });
+                    for (var activeSubscription of organizationActiveSubscriptions) {
+                        self.state.activeSubscriptionsMap[activeSubscription.serviceName] = activeSubscription;
+                    }
                 }
             });
     }
@@ -180,8 +193,9 @@ class ClippedDrawer extends React.Component {
             });
     }
 
-    loadOrganizationServiceInstances = () => {
-        var url = BASE_API_URL + "/serviceInstance/listOrganization?organizationName=" + this.props.organizationName;
+    loadOrganizationServiceInstances = (serviceName) => {
+        var url = BASE_API_URL + "/serviceInstance/listServiceOrganization?organizationName=" + this.props.organizationName
+        + "&serviceName=" + serviceName;
         var self = this;
         fetch(url)
             .then(function (response) {
@@ -519,13 +533,27 @@ class ClippedDrawer extends React.Component {
                                     </ListItemIcon>
                                     <ListItemText inset primary="Store"/>
                                 </ListItem>
-                                <ListItem button onClick={this.handleClick("instances")} className={classes.nested}
-                                          selected={this.state.activePageId === "instances"}>
+                                <ListItem button onClick={this.handleClick("my-services")} className={classes.nested}
+                                          selected={this.state.activePageId === "my-services"}>
                                     <ListItemIcon>
                                         <ViewModule/>
                                     </ListItemIcon>
-                                    <ListItemText inset primary="Instances"/>
+                                    <ListItemText inset primary="My services"/>
+                                    {this.state.myServicesOpen ? <ExpandLess/> : <ExpandMore/>}
                                 </ListItem>
+                                <Collapse in={this.state.myServicesOpen} timeout="auto" unmountOnExit>
+                                    <List>
+                                        {this.state.organizationActiveSubscriptions.map(function(service, idx){
+                                            return (
+                                                <ListItem button onClick={this.handleClick("instances", service.name)} className={classes.nestedTwice}>
+                                                    <ListItemIcon>
+                                                        <PlayArrow/>
+                                                    </ListItemIcon>
+                                                    <ListItemText inset primary={service.name}/>
+                                                </ListItem>
+                                            )}.bind(this))}
+                                    </List>
+                                </Collapse>
                                 <ListItem button onClick={this.handleClick("virtual-machines")}
                                           className={classes.nested}
                                           selected={this.state.activePageId === "virtual-machines"}>

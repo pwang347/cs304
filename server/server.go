@@ -53,9 +53,9 @@ var (
 		"list": queries.QueryAllServices,
 	}
 	serviceInstanceQueries = map[string]query{
-		"create":           queries.CreateServiceInstance,
-		"delete":           queries.DeleteServiceInstance,
-		"listOrganization": queries.QueryServiceInstanceOrganization,
+		"create":                  queries.CreateServiceInstance,
+		"delete":                  queries.DeleteServiceInstance,
+		"listServiceOrganization": queries.QueryServiceInstanceOrganization,
 	}
 	serviceInstanceConfigurationQueries = map[string]query{
 		"create":                 queries.CreateServiceInstanceConfiguration,

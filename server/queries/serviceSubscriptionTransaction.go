@@ -3,30 +3,31 @@ package queries
 import (
 	"database/sql"
 	"encoding/json"
-	"github.com/pwang347/cs304/server/common"
 	"net/url"
 	"strconv"
+
+	"github.com/pwang347/cs304/server/common"
 )
 
 // CreateServiceSubscriptionTransaction creates a new service subscription
 func CreateServiceSubscriptionTransaction(db *sql.DB, params url.Values) (data []byte, err error) {
 	var (
-		result           sql.Result
-		response         = SQLResponse{}
-		tx               *sql.Tx
-		serviceTypeStr   string
-		serviceType		 int
-		serviceName		 string
-		description		 string
-		organizationName string
-		activeUntilStr	 string
-		activeUntil		 int
-		amountPaidStr			string
-		amountPaid		 		int
-		processedTimeStampStr	string
-		processedTimeStamp		int
-		transactionNumStr		string
-		transactionNum			int
+		result                sql.Result
+		response              = SQLResponse{}
+		tx                    *sql.Tx
+		serviceTypeStr        string
+		serviceType           int
+		serviceName           string
+		description           string
+		organizationName      string
+		activeUntilStr        string
+		activeUntil           int
+		amountPaidStr         string
+		amountPaid            int
+		processedTimeStampStr string
+		processedTimeStamp    int
+		transactionNumStr     string
+		transactionNum        int
 	)
 
 	if tx, err = db.Begin(); err != nil {
@@ -86,15 +87,15 @@ func CreateServiceSubscriptionTransaction(db *sql.DB, params url.Values) (data [
 	return
 }
 
-// deletes a service subscription
+// DeleteServiceSubscriptionTransactionByTransaction deletes a service subscription
 func DeleteServiceSubscriptionTransactionByTransaction(db *sql.DB, params url.Values) (data []byte, err error) {
 	var (
-		result           		sql.Result
-		response         		= SQLResponse{}
-		tx               		*sql.Tx
-		transactionNumStr		string
-		transactionNum			int
-		organizationName		string
+		result            sql.Result
+		response          = SQLResponse{}
+		tx                *sql.Tx
+		transactionNumStr string
+		transactionNum    int
+		organizationName  string
 	)
 
 	if tx, err = db.Begin(); err != nil {
@@ -124,12 +125,12 @@ func DeleteServiceSubscriptionTransactionByTransaction(db *sql.DB, params url.Va
 	return
 }
 
-// lists all active service subscriptions that belongs to an organization
+// ListAllActiveServiceSubscriptionTransactions lists all active service subscriptions that belongs to an organization
 func ListAllActiveServiceSubscriptionTransactions(db *sql.DB, params url.Values) (data []byte, err error) {
 	var (
-		response         		= SQLResponse{}
-		tx               		*sql.Tx
-		organizationName		string
+		response         = SQLResponse{}
+		tx               *sql.Tx
+		organizationName string
 	)
 
 	if tx, err = db.Begin(); err != nil {
@@ -138,8 +139,8 @@ func ListAllActiveServiceSubscriptionTransactions(db *sql.DB, params url.Values)
 	if organizationName, err = common.GetRequiredParam(params, "organizationName"); err != nil {
 		return
 	}
-	if response.Data, response.AffectedRows, err = common.QueryJSON(tx, "SELECT * FROM " +
-		"ServiceSubscriptionTransaction WHERE organizationName = ? AND activeUntil >= NOW();",
+	if response.Data, response.AffectedRows, err = common.QueryJSON(tx, "SELECT * FROM "+
+		"ServiceSubscriptionTransaction SST, Service S WHERE S.name = SST.serviceName AND organizationName = ? AND activeUntil >= NOW();",
 		organizationName); err != nil {
 		tx.Rollback()
 		return
@@ -151,12 +152,12 @@ func ListAllActiveServiceSubscriptionTransactions(db *sql.DB, params url.Values)
 	return
 }
 
-// lists all completed transactions
-func ListAllCompletedTransactions(db *sql.DB, params url.Values) (data []byte, err error){
+// ListAllCompletedTransactions lists all completed transactions
+func ListAllCompletedTransactions(db *sql.DB, params url.Values) (data []byte, err error) {
 	var (
-		response         		= SQLResponse{}
-		tx               		*sql.Tx
-		organizationName		string
+		response         = SQLResponse{}
+		tx               *sql.Tx
+		organizationName string
 	)
 
 	if tx, err = db.Begin(); err != nil {

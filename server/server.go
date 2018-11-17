@@ -49,6 +49,9 @@ var (
 		"listUser":                          queries.QueryUserOrganizations,
 		"listUsersInOrganizationNotInGroup": queries.QueryOrganizationUsers,
 	}
+	regionQueries = map[string]query{
+		"list": queries.QueryAllRegions,
+	}
 	serviceQueries = map[string]query{
 		"list": queries.QueryAllServices,
 	}
@@ -159,6 +162,7 @@ func main() {
 	r.HandleFunc("/api/accessGroup/{query}", mapJSONEndpoints(accessGroupQueries))
 	r.HandleFunc("/api/creditCard/{query}", mapJSONEndpoints(creditCardQueries))
 	r.HandleFunc("/api/organization/{query}", mapJSONEndpoints(organizationQueries))
+	r.HandleFunc("/api/region/{query}", mapJSONEndpoints(regionQueries))
 	r.HandleFunc("/api/service/{query}", mapJSONEndpoints(serviceQueries))
 	r.HandleFunc("/api/serviceInstance/{query}", mapJSONEndpoints(serviceInstanceQueries))
 	r.HandleFunc("/api/serviceInstanceConfiguration/{query}", mapJSONEndpoints(serviceInstanceConfigurationQueries))

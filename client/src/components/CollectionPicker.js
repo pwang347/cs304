@@ -25,6 +25,10 @@ class CollectionPicker extends React.Component {
     }
 
     load = () => {
+      if (this.props.staticdata) {
+        this.setState(state => ({data: this.props.staticdata}));
+        return;
+      }
       var self = this;
       fetch(BASE_API_URL + this.props.dataEndpoint)
       .then(function(response) {
@@ -76,6 +80,7 @@ class CollectionPicker extends React.Component {
     keyfn: PropTypes.func,
     displayfn: PropTypes.func,
     dataEndpoint: PropTypes.string,
+    staticdata: PropTypes.array,
     titleText: PropTypes.string,
   };
   

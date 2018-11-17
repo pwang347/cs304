@@ -7,11 +7,16 @@ import DialogContentText from '@material-ui/core/DialogContentText';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import PropTypes from 'prop-types';
 import TextField from '@material-ui/core/TextField';
+import CollectionPicker from './CollectionPicker';
+import List from '@material-ui/core/List';
+import ListItem from '@material-ui/core/ListItem';
+import Typography from '@material-ui/core/Typography';
 
 class CreationDialog extends React.Component {
 
   state = {
       data: {},
+      selectedField: null,
   }
 
   handleClose = (result) => {
@@ -19,12 +24,23 @@ class CreationDialog extends React.Component {
   };
 
   handleDataChange = (field, e) => {
-    this.state.data[field] = e.target.value;
+    this.state.data[field.name] = e.target.value;
+  }
+
+  handleSelectFieldClose = (data) => {
+    this.state.data[this.state.selectedField.name] = data;
+    this.setState(state => ({selectedField: null}));
+    this.forceUpdate();
+  }
+
+  handleSelectField = (field) => {
+    this.setState(state => ({selectedField: field}));
   }
 
   render() {
     const { classes, onClose, dialog, ...other } = this.props;
-
+    console.log("@");
+    console.log(this.state.data);
     return (
       <div>
         <Dialog
@@ -36,19 +52,31 @@ class CreationDialog extends React.Component {
         >
           <DialogTitle id="alert-dialog-title">{dialog.titleText}</DialogTitle>
           <DialogContent>
-          {dialog.fields.map(function (field, idx) {
-            return (
-                <TextField
-                    required
-                    id={field}
-                    label={field}
-                    floatinglabeltext={field}
-                    margin="normal"
-                    value={this.state.data[field]}
-                    onChange={this.handleDataChange.bind(this, field)}
-                    key={field}
-                />
+              <List>
+              {dialog.fields.map(function (field, idx) {
+                return (
+                    <ListItem key={field.name}>
+                        {field.hasOwnProperty("options")?
+                    <div>
+                        <Typography>
+                            {this.state.data[field.name]}
+                        </Typography>
+                        <Button onClick={this.handleSelectField.bind(this, field)}>
+                            Select {field.name}
+                        </Button>
+                    </div>
+                    :
+                    <TextField
+                        required
+                        id={field.name}
+                        label={field.name}
+                        floatinglabeltext={field.name}
+                        margin="normal"
+                        onChange={this.handleDataChange.bind(this, field)}
+                    />}
+                    </ListItem>
             )}.bind(this))}
+              </List>
           </DialogContent>
           <DialogActions>
             <Button onClick={this.handleClose.bind(this, this.state.data)} color="primary" autoFocus>
@@ -59,6 +87,13 @@ class CreationDialog extends React.Component {
             </Button>
           </DialogActions>
         </Dialog>
+        {this.state.selectedField !== null && <CollectionPicker titleText={"Select " + this.state.selectedField.name}
+                        open={this.state.selectedField !== null}
+                        onClose={this.handleSelectFieldClose.bind(this)}
+                        staticdata={this.state.selectedField.options}
+                        displayfn={this.state.selectedField.displayfn}
+                        keyfn={this.state.selectedField.keyfn}>
+                    </CollectionPicker>}
       </div>
     );
   }

@@ -70,6 +70,7 @@ const styles = theme => ({
     },
     card: {
         width: 300,
+        minHeight: 300,
         display: 'inline-block',
         margin: theme.spacing.unit * 2,
     },
@@ -93,6 +94,7 @@ class ClippedDrawer extends React.Component {
         activeServiceName: null,
         services: [],
         servicesMap: {},
+        regions: [],
         organizationServiceInstances: [],
         organizationVirtualMachines: [],
         organizationActiveSubscriptions: [],
@@ -108,6 +110,7 @@ class ClippedDrawer extends React.Component {
     };
 
     componentDidMount() {
+        this.loadRegions();
         this.loadServices();
         this.loadOrganizationVirtualMachines();
         this.loadActiveServices();
@@ -122,7 +125,10 @@ class ClippedDrawer extends React.Component {
                 this.loadServices();
             }
             if (id === "instances") {
+                this.setState(state => ({activeServiceName: data}));
                 this.loadOrganizationServiceInstances(data);
+                this.setState(state => ({serviceOpen: true}));
+                this.setState(state => ({myServicesOpen: true}));
             }
             if (id === "virtual-machines") {
                 this.loadOrganizationVirtualMachines();
@@ -150,6 +156,25 @@ class ClippedDrawer extends React.Component {
             }
         }
     };
+
+    loadRegions = () => {
+        var url = BASE_API_URL + "/region/list";
+        var self = this;
+        fetch(url)
+            .then(function (response) {
+                if (response.status >= 400) {
+                    throw new Error("Bad response from server");
+                }
+                return response.json();
+            })
+            .then(function (json) {
+                if (json.affectedRows > 0) {
+                    self.setState({
+                        regions: JSON.parse(json.data)
+                    });
+                }
+            });
+    }
 
     loadActiveServices = () => {
         var url = BASE_API_URL + "/serviceSubscriptionTransaction/listActiveSubscriptions?organizationName=" + this.props.organizationName;
@@ -473,8 +498,6 @@ class ClippedDrawer extends React.Component {
                 for (var i = 0; i<self.state.organizationAccessGroups.length; i++){
                     insertIdx = i;
                     if (self.state.organizationAccessGroups[i].name.toLowerCase() > result.Name.toLowerCase()) {
-                        console.log(self.state.organizationAccessGroups[i].name)
-                        console.log(self.state.organizationAccessGroups[i].name < result.Name)
                         break;
                     }
                     if (i === self.state.organizationAccessGroups.length - 1) {
@@ -487,7 +510,6 @@ class ClippedDrawer extends React.Component {
                     self.state.organizationAccessGroups.splice(insertIdx, 0, {name: result.Name});
                 }
                 
-                console.log(self.state.organizationAccessGroups);
                 self.setState(state => ({organizationAccessGroups: self.state.organizationAccessGroups}));
                 // Trigger update
                 self.setState(state => ({accessGroupsMap: self.state.accessGroupsMap}));
@@ -497,8 +519,44 @@ class ClippedDrawer extends React.Component {
     handleCreateAccessGroup = () => {
         this.setState(state => ({creationDialog: {
             titleText: "Create a new access group",
-            fields: ["Name"],
+            fields: [{name: "Name"}],
             onClose: this.handleCloseForCreateAccessGroup.bind(undefined),
+        }}));
+    }
+
+    handleCloseForCreateServiceInstance = (serviceName, result) => {
+        this.setState(state => ({
+            creationDialog: null,
+        }));
+        if (!result) return;
+        var url = BASE_API_URL + "/serviceInstance/create?name=" + result.Name
+        + "&regionName=" + result.Region
+        + "&serviceName=" + serviceName
+        + "&organizationName=" + this.props.organizationName;
+        var self = this;
+        fetch(url)
+            .then(function (response) {
+                if (response.status >= 400) {
+                    throw new Error("Bad response from server");
+                }
+                return response.json();
+            })
+            .then(function(json) {
+                if (json.hasOwnProperty("error")) {
+                    throw new Error(json.error);
+                }
+                if (json.affectedRows !== 1) {
+                    throw new Error("Could not add service instance.");
+                }
+                self.loadOrganizationServiceInstances(self.state.activeServiceName);
+            });
+    }
+
+    handleCreateServiceInstance = () => {
+        this.setState(state => ({creationDialog: {
+            titleText: "Create a new instance for " + this.state.activeServiceName,
+            fields: [{name: "Name"}, {name: "Region", options: this.state.regions, keyfn: r => r.name, displayfn: r => r.name}],
+            onClose: this.handleCloseForCreateServiceInstance.bind(undefined, this.state.activeServiceName),
         }}));
     }
 
@@ -545,7 +603,8 @@ class ClippedDrawer extends React.Component {
                                     <List>
                                         {this.state.organizationActiveSubscriptions.map(function(service, idx){
                                             return (
-                                                <ListItem button onClick={this.handleClick("instances", service.name)} className={classes.nestedTwice}>
+                                                <ListItem button onClick={this.handleClick("instances", service.name)} className={classes.nestedTwice} key={service.name}
+                                                    selected={this.state.activePageId === "instances" && this.state.activeServiceName === service.name}>
                                                     <ListItemIcon>
                                                         <PlayArrow/>
                                                     </ListItemIcon>
@@ -634,12 +693,17 @@ class ClippedDrawer extends React.Component {
                                     </CardContent>
                                 </CardActionArea>
                                 <CardActions>
+                                    {this.state.activeSubscriptionsMap.hasOwnProperty(service.name)?
+                                    <Button size="small" color="primary" onClick={this.handleClick("instances", service.name)}>
+                                        View
+                                    </Button>
+                                    :
                                     <Button size="small" color="primary">
                                         Purchase
-                                    </Button>
+                                    </Button>}
                                 </CardActions>
                             </Card>)
-                        })}
+                        }.bind(this))}
                     </div>}
                     {this.state.activePageId === "instances" && <div>
                         {this.state.organizationServiceInstances.map(function (serviceInstance, idx) {
@@ -671,6 +735,10 @@ class ClippedDrawer extends React.Component {
                                 </CardActions>
                             </Card>)
                         }.bind(this))}
+                        <br/>
+                        <Button variant="contained" color="primary" onClick={this.handleCreateServiceInstance}>
+                            Create new instance
+                        </Button>
                     </div>}
                     {this.state.activePageId === "virtual-machines" && <div>
                         {this.state.organizationVirtualMachines.map(function (virtualMachine, idx) {

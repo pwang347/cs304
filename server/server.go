@@ -60,8 +60,10 @@ var (
 		"update": queries.UpdateServiceInstanceConfiguration,
 	}
 	serviceSubscriptionQueries = map[string]query{
-		"create": queries.CreateServiceSubscription,
-		"delete": queries.DeleteServiceSubscription,
+		"create": queries.CreateServiceSubscriptionTransaction,
+		"delete": queries.DeleteServiceSubscriptionTransactionByTransaction,
+		"listActiveSubscriptions": queries.ListAllActiveServiceSubscriptionTransactions,
+		"listTransactions": queries.ListAllCompletedTransactions,
 	}
 	userQueries = map[string]query{
 		"create": queries.CreateUser,
@@ -145,7 +147,7 @@ func main() {
 	r.HandleFunc("/api/service/{query}", mapJSONEndpoints(serviceQueries))
 	r.HandleFunc("/api/serviceInstance/{query}", mapJSONEndpoints(serviceInstanceQueries))
 	r.HandleFunc("/api/serviceInstanceConfiguration/{query}", mapJSONEndpoints(serviceInstanceConfigurationQueries))
-	r.HandleFunc("/api/serviceSubscription/{query}", mapJSONEndpoints(serviceSubscriptionQueries))
+	r.HandleFunc("/api/serviceSubscriptionTransaction/{query}", mapJSONEndpoints(serviceSubscriptionQueries))
 	r.HandleFunc("/api/user/{query}", mapJSONEndpoints(userQueries))
 	http.Handle("/", r)
 

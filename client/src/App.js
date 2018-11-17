@@ -12,9 +12,9 @@ class App extends Component {
     super(props);
 
     this.state = {
-      isLoggedIn: false,
-      organizationName: null,
-      userEmailAddress: null,
+      isLoggedIn: true,
+      organizationName: "123",
+      userEmailAddress: "test",
     };
 
     this.login = this.login.bind(this);

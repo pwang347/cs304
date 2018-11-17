@@ -28,6 +28,13 @@ import CardActions from '@material-ui/core/CardActions';
 import CardContent from '@material-ui/core/CardContent';
 import CardMedia from '@material-ui/core/CardMedia';
 import Button from '@material-ui/core/Button';
+import Paper from '@material-ui/core/Paper';
+import Grid from '@material-ui/core/Grid';
+import Table from '@material-ui/core/Table';
+import TableBody from '@material-ui/core/TableBody';
+import TableCell from '@material-ui/core/TableCell';
+import TableHead from '@material-ui/core/TableHead';
+import TableRow from '@material-ui/core/TableRow';
 
 const drawerWidth = 300;
 
@@ -70,12 +77,16 @@ class ClippedDrawer extends React.Component {
       services: [],
       organizationServiceInstances: [],
       organizationVirtualMachines: [],
+        organizationActiveSubscriptions: [],
+        organizationTransactions: [],
     };
 
     componentDidMount() {
         this.loadServices();
         this.loadOrganizationServiceInstances();
         this.loadOrganizationVirtualMachines();
+        this.loadActiveServices();
+        this.loadTransactions();
     }
 
     handleClick = (id) => {
@@ -89,6 +100,10 @@ class ClippedDrawer extends React.Component {
             if (id === "virtual-machines") {
                 this.loadOrganizationVirtualMachines();
             }
+            if (id === "billing") {
+                this.loadActiveServices();
+                this.loadTransactions();
+            }
 
             if (id === "service") {
                 this.setState(state => ({ serviceOpen: !state.serviceOpen }));
@@ -101,6 +116,44 @@ class ClippedDrawer extends React.Component {
             }
         }
     };
+
+    loadActiveServices = () => {
+        var url = BASE_API_URL + "/serviceSubscriptionTransaction/listActiveSubscriptions?organizationName=" + this.props.organizationName;
+        var self = this;
+        fetch(url)
+            .then(function(response) {
+                if (response.status >= 400) {
+                    throw new Error("Bad response from server");
+                }
+                return response.json();
+            })
+            .then(function(json) {
+                if (json.affectedRows > 0) {
+                    self.setState({
+                        organizationActiveSubscriptions: JSON.parse(json.data)
+                    });
+                }
+            });
+    }
+
+    loadTransactions = () => {
+        var url = BASE_API_URL + "/serviceSubscriptionTransaction/listTransactions?organizationName=" + this.props.organizationName;
+        var self = this;
+        fetch(url)
+            .then(function(response) {
+                if (response.status >= 400) {
+                    throw new Error("Bad response from server");
+                }
+                return response.json();
+            })
+            .then(function(json) {
+                if (json.affectedRows > 0) {
+                    self.setState({
+                        organizationTransactions: JSON.parse(json.data)
+                    });
+                }
+            });
+    }
 
     loadOrganizationServiceInstances = () => {
         var url = BASE_API_URL + "/serviceInstance/listOrganization?organizationName=" + this.props.organizationName;
@@ -327,8 +380,69 @@ class ClippedDrawer extends React.Component {
                 })}
                 </Typography>}
                 {this.state.activePageId === "billing" && <Typography paragraph>
-                Billing page
-                </Typography>}
+                    <Grid container spacing={24}>
+                        <Grid item xs={12}>
+                            <Typography variant="headline" gutterBottom>Active Subscriptions</Typography>
+                            <Paper className={classes.paper}>
+                                <Table className={classes.table}>
+                                    <TableHead>
+                                        <TableRow>
+                                            <TableCell>Service Name</TableCell>
+                                            <TableCell numeric>Service Type</TableCell>
+                                            <TableCell>Description</TableCell>
+                                            <TableCell>Active Until</TableCell>
+                                        </TableRow>
+                                    </TableHead>
+                                    <TableBody>
+                                        {this.state.organizationActiveSubscriptions.map(function(activeSub, idx){
+                                            return (
+                                                <TableRow key={activeSub.serviceName}>
+                                                    <TableCell component="th" scope="row">
+                                                        {activeSub.serviceName}
+                                                    </TableCell>
+                                                    <TableCell numeric>{activeSub.type}</TableCell>
+                                                    <TableCell>{activeSub.description}</TableCell>
+                                                    <TableCell>{activeSub.activeUntil}</TableCell>
+                                                </TableRow>
+                                            )
+                                        })}
+                                    </TableBody>
+                                </Table>
+                            </Paper>
+                        </Grid>
+                        <Grid item xs={12} sm={12}>
+                            <Typography variant="headline" gutterBottom>Processed Transactions</Typography>
+                            <Paper className={classes.paper}>
+                                <Table className={classes.table}>
+                                    <TableHead>
+                                        <TableRow>
+                                            <TableCell>Service Name</TableCell>
+                                            <TableCell>Transaction Number</TableCell>
+                                            <TableCell numeric>Amount Paid</TableCell>
+                                            <TableCell>Processed Date</TableCell>
+                                        </TableRow>
+                                    </TableHead>
+                                    <TableBody>
+                                        {this.state.organizationTransactions.map(function(tran, idx){
+                                            return (
+                                                <TableRow key={tran.transactionNumber}>
+                                                    <TableCell component="th" scope="row">
+                                                        {tran.serviceName}
+                                                    </TableCell>
+                                                    <TableCell>
+                                                        {tran.transactionNumber}
+                                                    </TableCell>
+                                                    <TableCell numeric>{tran.amountPaid}</TableCell>
+                                                    <TableCell>{tran.processedTimestamp}</TableCell>
+                                                </TableRow>
+                                            )
+                                        })}
+                                    </TableBody>
+                                </Table>
+                            </Paper>
+                        </Grid>
+                    </Grid>
+                    </Typography>}
                 {this.state.activePageId === "access-groups" && <Typography paragraph>
                 Access groups page
                 </Typography>}

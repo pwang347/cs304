@@ -202,14 +202,18 @@ CREATE TABLE VirtualMachineAccessGroupPermissions
         ON UPDATE CASCADE
 );
 
-CREATE TABLE ServiceSubscription
+CREATE TABLE ServiceSubscriptionTransaction
 (
     type INT,
     serviceName VARCHAR(255),
     organizationName VARCHAR(255),
     description VARCHAR(255),
     activeUntil TIMESTAMP,
-    PRIMARY KEY (type, serviceName),
+    transactionNumber INT,
+    amountPaid INT,
+    processedTimestamp TIMESTAMP,
+    PRIMARY KEY (transactionNumber, organizationName),
+    UNIQUE (type, serviceName, organizationName),
     FOREIGN KEY (organizationName) REFERENCES Organization(name)
         ON DELETE CASCADE
         ON UPDATE CASCADE
@@ -233,23 +237,6 @@ CREATE TABLE OrganizationCreditCardPairs
         ON DELETE CASCADE
         ON UPDATE CASCADE,
     FOREIGN KEY (creditCardNumber) REFERENCES CreditCard(cardNumber)
-        ON DELETE CASCADE
-        ON UPDATE CASCADE
-);
-
-CREATE TABLE Transaction
-(
-    transactionNumber INT,
-    serviceSubscriptionType INT NOT NULL,
-    serviceSubscriptionServiceName VARCHAR(255) NOT NULL,
-    organizationName VARCHAR(255),
-    amountPaid INT,
-    processedTimestamp TIMESTAMP,
-    PRIMARY KEY (transactionNumber, organizationName),
-    FOREIGN KEY (serviceSubscriptionType, serviceSubscriptionServiceName) REFERENCES ServiceSubscription(type, serviceName)
-        ON DELETE NO ACTION
-        ON UPDATE CASCADE,
-    FOREIGN KEY (organizationName) REFERENCES Organization(name)
         ON DELETE CASCADE
         ON UPDATE CASCADE
 );

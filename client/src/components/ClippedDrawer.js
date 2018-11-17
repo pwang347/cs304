@@ -37,11 +37,11 @@ import TableBody from '@material-ui/core/TableBody';
 import TableCell from '@material-ui/core/TableCell';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
-import ViewServiceInstanceDialog from './ViewServiceInstanceDialog';
 import ConfirmationDialog from './ConfirmationDialog';
 import CollectionPicker from './CollectionPicker';
 import CreationDialog from './CreationDialog';
 import PlayArrow from '@material-ui/icons/PlayArrow';
+import DetailViewDialog from './DetailViewDialog';
 
 const drawerWidth = 300;
 
@@ -106,6 +106,7 @@ class ClippedDrawer extends React.Component {
         accessGroupsMap: {},
         confirmationDialog: null,
         creationDialog: null,
+        detailViewDialog: null,
         addingToGroup: null,
     };
 
@@ -317,12 +318,69 @@ class ClippedDrawer extends React.Component {
             });
     }
 
-    handleServiceInstanceDetails = (serviceInstanceName) => {
-        this.setState(state => ({displayedServiceInstance: this.state.serviceInstancesMap[serviceInstanceName]}));
+    handleServiceInstanceDetailsClose = () => {
+        this.setState(state => ({detailViewDialog: null}));
     }
 
-    handleServiceInstanceDetailsClose = () => {
-        this.setState(state => ({displayedServiceInstance: null}));
+    handleServiceInstanceDetails = (serviceInstanceName) => {
+        var serviceInstance = this.state.serviceInstancesMap[serviceInstanceName];
+        this.setState(state => ({detailViewDialog: {
+                title: "Details for " + serviceInstanceName,
+                tables: [
+                    {
+                        title: "Overview",
+                        columns: [
+                            {
+                                name: "Service",
+                                key: "serviceName",
+                            },
+                            {
+                                name: "Region",
+                                key: "regionName",
+                            },
+                        ],
+                        staticdata: [
+                            {
+                                serviceName: serviceInstance.serviceName,
+                                regionName: serviceInstance.regionName,
+                            }
+                        ],
+                    },
+                    {
+                        title: "Configurations",
+                        columns: [
+                            {
+                                name: "Configuration Key",
+                                key: "configKey",
+                            },
+                            {
+                                name: "Value",
+                                key: "data",
+                            },
+                        ],
+                        dataEndpoint: "/serviceInstanceConfiguration/listForServiceInstance?serviceInstanceName=" + serviceInstanceName +
+                        "&serviceInstanceServiceName=" + serviceInstance.serviceName +
+                        "&serviceInstanceOrganizationName=" + this.props.organizationName,
+                    },
+                    {
+                        title: "Keys",
+                        columns: [
+                            {
+                                name: "Key",
+                                key: "keyValue",
+                            },
+                            {
+                                name: "Active until",
+                                key: "activeUntil",
+                            },
+                        ],
+                        dataEndpoint: "/serviceInstanceKey/listForServiceInstance?serviceInstanceName=" + serviceInstanceName +
+                        "&serviceInstanceServiceName=" + serviceInstance.serviceName +
+                        "&serviceInstanceOrganizationName=" + this.props.organizationName,
+                    }
+                ],
+                onClose: this.handleServiceInstanceDetailsClose.bind(this)
+            }}));
     }
 
     handleCloseForDeleteServiceInstance = (serviceInstanceName, result) => {
@@ -871,10 +929,8 @@ class ClippedDrawer extends React.Component {
                             Change organization
                         </Button>
                     </Typography>}
-                    {this.state.displayedServiceInstance !== null &&
-                    <ViewServiceInstanceDialog open={this.state.displayedServiceInstance}
-                                               onClose={this.handleServiceInstanceDetailsClose}
-                                               serviceInstance={this.state.displayedServiceInstance}/>
+                    {this.state.detailViewDialog !== null &&
+                    <DetailViewDialog open={this.state.detailViewDialog !== null} dialog={this.state.detailViewDialog}/>
                     }
                     {this.state.confirmationDialog !== null &&
                     <ConfirmationDialog dialog={this.state.confirmationDialog}/>

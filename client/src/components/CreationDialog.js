@@ -39,8 +39,6 @@ class CreationDialog extends React.Component {
 
   render() {
     const { classes, onClose, dialog, ...other } = this.props;
-    console.log("@");
-    console.log(this.state.data);
     return (
       <div>
         <Dialog

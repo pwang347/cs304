@@ -28,6 +28,7 @@ import CardActions from '@material-ui/core/CardActions';
 import CardContent from '@material-ui/core/CardContent';
 import CardMedia from '@material-ui/core/CardMedia';
 import Button from '@material-ui/core/Button';
+import ViewServiceInstanceDialog from './ViewServiceInstanceDialog';
 
 const drawerWidth = 300;
 
@@ -52,15 +53,16 @@ const styles = theme => ({
     paddingLeft: theme.spacing.unit * 4,
   },
   card: {
-    maxWidth: 345,
+    width: 300,
     display: 'inline-block',
     margin: theme.spacing.unit * 2,
-    disabled: true,
   },
   media: {
     height: 140,
   },
 });
+
+const defaultImageUrl = "https://material-ui.com/static/images/cards/contemplative-reptile.jpg";
 
 class ClippedDrawer extends React.Component {
     state = {
@@ -68,8 +70,11 @@ class ClippedDrawer extends React.Component {
       organizationOpen: false,
       activePageId: "store",
       services: [],
+      servicesMap: {},
       organizationServiceInstances: [],
       organizationVirtualMachines: [],
+      displayedServiceInstance: null,
+      serviceInstancesMap: {},
     };
 
     componentDidMount() {
@@ -113,14 +118,18 @@ class ClippedDrawer extends React.Component {
             return response.json();
         })
         .then(function(json) {
+            var organizationServiceInstances = JSON.parse(json.data);
             self.setState({
-                organizationServiceInstances: JSON.parse(json.data)
+                organizationServiceInstances: organizationServiceInstances
             });
+            for (var serviceInstance of organizationServiceInstances) {
+                self.state.serviceInstancesMap[serviceInstance.name] = serviceInstance;
+            }
         });
     }
 
     loadOrganizationVirtualMachines = () => {
-        var url = BASE_API_URL + "/serviceInstance/listOrganization?organizationName=" + this.props.organizationName;
+        var url = BASE_API_URL + "/virtualMachine/listOrganization?organizationName=" + this.props.organizationName;
         var self = this;
         fetch(url)
         .then(function(response) {
@@ -147,10 +156,22 @@ class ClippedDrawer extends React.Component {
             return response.json();
         })
         .then(function(json) {
+            var services = JSON.parse(json.data);
             self.setState({
-              services: JSON.parse(json.data)
+              services: services
             });
+            for (var service of services) {
+                self.state.servicesMap[service.name] = service;
+            }
         });
+    }
+
+    handleServiceInstanceDetails = (serviceInstanceName) => {
+        this.setState(state => ({displayedServiceInstance: this.state.serviceInstancesMap[serviceInstanceName]}));
+    }
+
+    handleServiceInstanceDetailsClose = () => {
+        this.setState(state => ({displayedServiceInstance: null}));
     }
 
     render() {
@@ -239,13 +260,13 @@ class ClippedDrawer extends React.Component {
             </Drawer>
             <main className={classes.content}>
                 <div className={classes.toolbar} />
-                {this.state.activePageId === "store" && <Typography paragraph>
+                {this.state.activePageId === "store" && <div>
                 {this.state.services.map(function(service, idx){
-                    return (<Card className={classes.card} disabled={true}>
+                    return (<Card className={classes.card} key={service.name}>
                         <CardActionArea>
                             <CardMedia
                             className={classes.media}
-                            image="https://material-ui.com/static/images/cards/contemplative-reptile.jpg"
+                            image={(!service.imageUrl)? defaultImageUrl : service.imageUrl}
                             title="Contemplative Reptile"
                             />
                             <CardContent>
@@ -259,22 +280,20 @@ class ClippedDrawer extends React.Component {
                         </CardActionArea>
                         <CardActions>
                             <Button size="small" color="primary">
-                            Share
-                            </Button>
-                            <Button size="small" color="primary">
-                            Learn More
+                            Purchase
                             </Button>
                         </CardActions>
                     </Card>)
                 })}
-                </Typography>}
-                {this.state.activePageId === "instances" && <Typography paragraph>
+                </div>}
+                {this.state.activePageId === "instances" && <div>
                 {this.state.organizationServiceInstances.map(function(serviceInstance, idx){
-                    return (<Card className={classes.card} disabled={true}>
+                    return (<Card className={classes.card} key={serviceInstance.name}>
                         <CardActionArea>
                             <CardMedia
                             className={classes.media}
-                            image="https://material-ui.com/static/images/cards/contemplative-reptile.jpg"
+                            image={(!this.state.servicesMap || !this.state.servicesMap.hasOwnProperty(serviceInstance.serviceName)
+                                || !this.state.servicesMap[serviceInstance.serviceName].imageUrl)? defaultImageUrl : this.state.servicesMap[serviceInstance.serviceName].imageUrl}
                             title="Contemplative Reptile"
                             />
                             <CardContent>
@@ -287,45 +306,45 @@ class ClippedDrawer extends React.Component {
                             </CardContent>
                         </CardActionArea>
                         <CardActions>
-                            <Button size="small" color="primary">
-                            Share
+                            <Button size="small" color="primary" onClick={this.handleServiceInstanceDetails.bind(this, serviceInstance.name)}>
+                            View details
                             </Button>
                             <Button size="small" color="primary">
-                            Learn More
+                            Terminate
                             </Button>
                         </CardActions>
                     </Card>)
-                })}
-                </Typography>}
-                {this.state.activePageId === "virtual-machines" && <Typography paragraph>
-                {this.state.organizationVirtualMachines.map(function(virtualMachines, idx){
-                    return (<Card className={classes.card} disabled={true}>
+                }.bind(this))}
+                </div>}
+                {this.state.activePageId === "virtual-machines" && <div>
+                {this.state.organizationVirtualMachines.map(function(virtualMachine, idx){
+                    return (<Card className={classes.card} key={virtualMachine.ipAddress}>
                         <CardActionArea>
                             <CardMedia
                             className={classes.media}
-                            image="https://material-ui.com/static/images/cards/contemplative-reptile.jpg"
+                            image={defaultImageUrl}
                             title="Contemplative Reptile"
                             />
                             <CardContent>
                             <Typography gutterBottom variant="h5" component="h2">
-                                {virtualMachines.name}
+                                {virtualMachine.ipAddress}
                             </Typography>
                             <Typography component="p">
-                                {virtualMachines.serviceName}
+                                {virtualMachine.description}
                             </Typography>
                             </CardContent>
                         </CardActionArea>
                         <CardActions>
                             <Button size="small" color="primary">
-                            Share
+                            View details
                             </Button>
                             <Button size="small" color="primary">
-                            Learn More
+                            Terminate
                             </Button>
                         </CardActions>
                     </Card>)
                 })}
-                </Typography>}
+                </div>}
                 {this.state.activePageId === "billing" && <Typography paragraph>
                 Billing page
                 </Typography>}
@@ -335,10 +354,8 @@ class ClippedDrawer extends React.Component {
                 {this.state.activePageId === "my-profile" && <Typography paragraph>
                 My profile page
                 </Typography>}
-                <Typography paragraph>
-                Some content here.
-                </Typography>
-            </main>
+                {this.state.displayedServiceInstance !== null && <ViewServiceInstanceDialog open={this.state.displayedServiceInstance} onClose={this.handleServiceInstanceDetailsClose} serviceInstance={this.state.displayedServiceInstance}/>
+                }</main>
             </div>
         );
     }

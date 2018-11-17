@@ -12,23 +12,23 @@ import (
 // creates a new virtual machine
 func CreateVirtualMachine(db *sql.DB, params url.Values) (data []byte, err error) {
 	var (
-		result           sql.Result
-		response         = SQLResponse{}
-		tx               *sql.Tx
-		ipAddress        string
-		description      string
-		stateStr         string
-		state			 int
-		coresStr		 string
-		cores			 int
-		diskSpaceStr	 string
-		diskSpace		 int
-		ramStr			 string
-		ram				 int
-		baseImageOS		 string
-		baseImageVersion string
-		regionName		 string
-		organizationName string
+		result                    sql.Result
+		response                  = SQLResponse{}
+		tx                        *sql.Tx
+		ipAddress                 string
+		description               string
+		stateStr                  string
+		state                     int
+		coresStr                  string
+		cores                     int
+		diskSpaceStr              string
+		diskSpace                 int
+		ramStr                    string
+		ram                       int
+		baseImageOS               string
+		baseImageVersion          string
+		regionName                string
+		organizationName          string
 		virtualMachineServiceName string
 	)
 
@@ -81,8 +81,8 @@ func CreateVirtualMachine(db *sql.DB, params url.Values) (data []byte, err error
 		return
 	}
 	if result, err = tx.Exec(
-		"INSERT INTO VirtualMachine " +
-			"(description, ipAddress, state, cores, diskSpace, ram, baseImageOs, baseImageVersion, regionName, organizationName, virtualMachineServiceName)" +
+		"INSERT INTO VirtualMachine "+
+			"(description, ipAddress, state, cores, diskSpace, ram, baseImageOs, baseImageVersion, regionName, organizationName, virtualMachineServiceName)"+
 			" VALUES(?,?,?,?,?,?,?,?,?,?,?);",
 		description, ipAddress, state, cores, diskSpace, ram, baseImageOS, baseImageVersion, regionName, organizationName, virtualMachineServiceName); err != nil {
 		tx.Rollback()
@@ -101,10 +101,10 @@ func CreateVirtualMachine(db *sql.DB, params url.Values) (data []byte, err error
 // deletes a virtual machine
 func DeleteVirtualMachine(db *sql.DB, params url.Values) (data []byte, err error) {
 	var (
-		result           sql.Result
-		response         = SQLResponse{}
-		tx               *sql.Tx
-		ipAddress		 string
+		result    sql.Result
+		response  = SQLResponse{}
+		tx        *sql.Tx
+		ipAddress string
 	)
 
 	if tx, err = db.Begin(); err != nil {
@@ -122,6 +122,32 @@ func DeleteVirtualMachine(db *sql.DB, params url.Values) (data []byte, err error
 		return
 	}
 	if response.AffectedRows, err = result.RowsAffected(); err != nil {
+		return
+	}
+	data, err = json.Marshal(response)
+	return
+}
+
+// QueryVirtualMachineOrganization queries from serviceInstance for organization
+func QueryVirtualMachineOrganization(db *sql.DB, params url.Values) (data []byte, err error) {
+	var (
+		response         = SQLResponse{}
+		tx               *sql.Tx
+		organizationName string
+	)
+
+	if tx, err = db.Begin(); err != nil {
+		return nil, err
+	}
+	if organizationName, err = common.GetRequiredParam(params, "organizationName"); err != nil {
+		return
+	}
+	if response.Data, response.AffectedRows, err = common.QueryJSON(tx, "SELECT * FROM VirtualMachine "+
+		"WHERE organizationName = ?;", organizationName); err != nil {
+		tx.Rollback()
+		return
+	}
+	if err = tx.Commit(); err != nil {
 		return
 	}
 	data, err = json.Marshal(response)

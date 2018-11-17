@@ -3,27 +3,28 @@ package queries
 import (
 	"database/sql"
 	"encoding/json"
-	"github.com/pwang347/cs304/server/common"
 	"net/url"
 	"strconv"
+
+	"github.com/pwang347/cs304/server/common"
 )
 
 // Create a new transaction
 func CreateTransaction(db *sql.DB, params url.Values) (data []byte, err error) {
 	var (
-		result           		sql.Result
-		response         		= SQLResponse{}
-		tx               		*sql.Tx
-		transactionNumStr		string
-		transactionNum			int
-		serviceSubTypeStr		string
-		serviceSubType   		int
-		serviceSubServiceName   string
-		organizationName		string
-		amountPaidStr			string
-		amountPaid		 		int
-		processedTimeStampStr	string
-		processedTimeStamp		int
+		result                sql.Result
+		response              = SQLResponse{}
+		tx                    *sql.Tx
+		transactionNumStr     string
+		transactionNum        int
+		serviceSubTypeStr     string
+		serviceSubType        int
+		serviceSubServiceName string
+		organizationName      string
+		amountPaidStr         string
+		amountPaid            int
+		processedTimeStampStr string
+		processedTimeStamp    int
 	)
 
 	if tx, err = db.Begin(); err != nil {
@@ -56,7 +57,7 @@ func CreateTransaction(db *sql.DB, params url.Values) (data []byte, err error) {
 	if processedTimeStampStr, err = common.GetRequiredParam(params, "processedTimeStamp"); err != nil {
 		return
 	}
-	if processedTimeStamp, err = strconv.Atoi(amountPaidStr); err != nil {
+	if processedTimeStamp, err = strconv.Atoi(processedTimeStampStr); err != nil {
 		return
 	}
 	if result, err = tx.Exec("INSERT INTO TRANSACTION (transactionNumber,serviceSubscriptionType,serviceSubscriptionServiceName, organizationName, amountPaid, processedTimestamp) VALUES(?,?,?,?,?,?);",
@@ -77,12 +78,12 @@ func CreateTransaction(db *sql.DB, params url.Values) (data []byte, err error) {
 // Deletes a transaction
 func DeleteTransaction(db *sql.DB, params url.Values) (data []byte, err error) {
 	var (
-		result           		sql.Result
-		response         		= SQLResponse{}
-		tx               		*sql.Tx
-		transactionNumStr		string
-		transactionNum			int
-		organizationName		string
+		result            sql.Result
+		response          = SQLResponse{}
+		tx                *sql.Tx
+		transactionNumStr string
+		transactionNum    int
+		organizationName  string
 	)
 
 	if tx, err = db.Begin(); err != nil {

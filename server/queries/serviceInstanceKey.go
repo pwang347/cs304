@@ -8,23 +8,26 @@ import (
 	"github.com/pwang347/cs304/server/common"
 )
 
-// CreateServiceInstanceConfiguration creates a new service instance configuration
-func CreateServiceInstanceConfiguration(db *sql.DB, params url.Values) (data []byte, err error) {
+// CreateServiceInstanceKey creates a new service instance configuration
+func CreateServiceInstanceKey(db *sql.DB, params url.Values) (data []byte, err error) {
 	var (
 		result                          sql.Result
 		response                        = SQLResponse{}
 		tx                              *sql.Tx
-		configKey                       string
+		keyValue                        string
+		activeUntilStr                  string // TODO
 		serviceInstanceName             string
 		serviceInstanceServiceName      string
 		serviceInstanceOrganizationName string
-		dataStr                         string
 	)
 
 	if tx, err = db.Begin(); err != nil {
 		return nil, err
 	}
-	if configKey, err = common.GetRequiredParam(params, "configKey"); err != nil {
+	if keyValue, err = common.GetRequiredParam(params, "keyValue"); err != nil {
+		return
+	}
+	if activeUntilStr, err = common.GetRequiredParam(params, "activeUntil"); err != nil {
 		return
 	}
 	if serviceInstanceName, err = common.GetRequiredParam(params, "serviceInstanceName"); err != nil {
@@ -36,12 +39,9 @@ func CreateServiceInstanceConfiguration(db *sql.DB, params url.Values) (data []b
 	if serviceInstanceOrganizationName, err = common.GetRequiredParam(params, "serviceInstanceOrganizationName"); err != nil {
 		return
 	}
-	if dataStr, err = common.GetRequiredParam(params, "data"); err != nil {
-		return
-	}
-	if result, err = tx.Exec("INSERT INTO ServiceInstanceConfiguration (configKey,serviceInstanceName,serviceInstanceServiceName,serviceInstanceOrganizationName,data) "+
+	if result, err = tx.Exec("INSERT INTO ServiceInstanceKey (keyValue,activeUntil,serviceInstanceServiceName,serviceInstanceOrganizationName) "+
 		"VALUES(?,?,?,?,?);",
-		configKey, serviceInstanceName, serviceInstanceServiceName, serviceInstanceOrganizationName, dataStr); err != nil {
+		keyValue, activeUntilStr, serviceInstanceName, serviceInstanceServiceName, serviceInstanceOrganizationName); err != nil {
 		tx.Rollback()
 		return
 	}
@@ -55,13 +55,13 @@ func CreateServiceInstanceConfiguration(db *sql.DB, params url.Values) (data []b
 	return
 }
 
-// DeleteServiceInstanceConfiguration deletes a service instance configuration
-func DeleteServiceInstanceConfiguration(db *sql.DB, params url.Values) (data []byte, err error) {
+// DeleteServiceInstanceKey deletes a service instance configuration
+func DeleteServiceInstanceKey(db *sql.DB, params url.Values) (data []byte, err error) {
 	var (
 		result                          sql.Result
 		response                        = SQLResponse{}
 		tx                              *sql.Tx
-		configKey                       string
+		keyValue                        string
 		serviceInstanceName             string
 		serviceInstanceServiceName      string
 		serviceInstanceOrganizationName string
@@ -70,7 +70,7 @@ func DeleteServiceInstanceConfiguration(db *sql.DB, params url.Values) (data []b
 	if tx, err = db.Begin(); err != nil {
 		return nil, err
 	}
-	if configKey, err = common.GetRequiredParam(params, "configKey"); err != nil {
+	if keyValue, err = common.GetRequiredParam(params, "keyValue"); err != nil {
 		return
 	}
 	if serviceInstanceName, err = common.GetRequiredParam(params, "serviceInstanceName"); err != nil {
@@ -82,9 +82,9 @@ func DeleteServiceInstanceConfiguration(db *sql.DB, params url.Values) (data []b
 	if serviceInstanceOrganizationName, err = common.GetRequiredParam(params, "serviceInstanceOrganizationName"); err != nil {
 		return
 	}
-	if result, err = tx.Exec("DELETE FROM ServiceInstanceConfiguration "+
-		"WHERE configKey=? AND serviceInstanceName=? AND serviceInstanceServiceName=? AND serviceInstanceOrganizationName=?;",
-		configKey, serviceInstanceName, serviceInstanceServiceName, serviceInstanceOrganizationName); err != nil {
+	if result, err = tx.Exec("DELETE FROM ServiceInstanceKey "+
+		"WHERE keyValue=? AND serviceInstanceName=? AND serviceInstanceServiceName=? AND serviceInstanceOrganizationName=?;",
+		keyValue, serviceInstanceName, serviceInstanceServiceName, serviceInstanceOrganizationName); err != nil {
 		tx.Rollback()
 		return
 	}
@@ -98,24 +98,24 @@ func DeleteServiceInstanceConfiguration(db *sql.DB, params url.Values) (data []b
 	return
 }
 
-// UpdateServiceInstanceConfiguration updates the details of a service instance configuration
-func UpdateServiceInstanceConfiguration(db *sql.DB, params url.Values) (data []byte, err error) {
+// UpdateServiceInstanceKey updates the details of a service instance configuration
+func UpdateServiceInstanceKey(db *sql.DB, params url.Values) (data []byte, err error) {
 	var (
 		result                          sql.Result
 		response                        = SQLResponse{}
 		tx                              *sql.Tx
-		configKey                       string
+		keyValue                        string
 		serviceInstanceName             string
 		serviceInstanceServiceName      string
 		serviceInstanceOrganizationName string
-		newConfigKey                    string
-		newData                         string
+		newKeyValue                     string
+		newActiveUntil                  string // TODO
 	)
 
 	if tx, err = db.Begin(); err != nil {
 		return nil, err
 	}
-	if configKey, err = common.GetRequiredParam(params, "configKey"); err != nil {
+	if keyValue, err = common.GetRequiredParam(params, "keyValue"); err != nil {
 		return
 	}
 	if serviceInstanceName, err = common.GetRequiredParam(params, "serviceInstanceName"); err != nil {
@@ -127,16 +127,16 @@ func UpdateServiceInstanceConfiguration(db *sql.DB, params url.Values) (data []b
 	if serviceInstanceOrganizationName, err = common.GetRequiredParam(params, "serviceInstanceOrganizationName"); err != nil {
 		return
 	}
-	if newConfigKey, err = common.GetRequiredParam(params, "newConfigKey"); err != nil {
+	if newKeyValue, err = common.GetRequiredParam(params, "newKeyValue"); err != nil {
 		return
 	}
-	if newData, err = common.GetRequiredParam(params, "newData"); err != nil {
+	if newActiveUntil, err = common.GetRequiredParam(params, "newActiveUntil"); err != nil {
 		return
 	}
-	if result, err = tx.Exec("UPDATE ServiceInstanceConfiguration "+
-		"SET configKey=?, data=? "+
-		"WHERE configKey=? AND serviceInstanceName=? AND serviceInstanceServiceName=? AND serviceInstanceOrganizationName=?;",
-		newConfigKey, newData, configKey, serviceInstanceName, serviceInstanceServiceName, serviceInstanceOrganizationName); err != nil {
+	if result, err = tx.Exec("UPDATE ServiceInstanceKey "+
+		"SET keyValue=?, activeUntil=? "+
+		"WHERE keyValue=? AND serviceInstanceName=? AND serviceInstanceServiceName=? AND serviceInstanceOrganizationName=?;",
+		newKeyValue, newActiveUntil, keyValue, serviceInstanceName, serviceInstanceServiceName, serviceInstanceOrganizationName); err != nil {
 		tx.Rollback()
 		return
 	}
@@ -151,8 +151,8 @@ func UpdateServiceInstanceConfiguration(db *sql.DB, params url.Values) (data []b
 	return
 }
 
-// QueryServiceInstanceConfigurations queries all configurations for a service instance
-func QueryServiceInstanceConfigurations(db *sql.DB, params url.Values) (data []byte, err error) {
+// QueryServiceInstanceKeys queries all keys for a service instance
+func QueryServiceInstanceKeys(db *sql.DB, params url.Values) (data []byte, err error) {
 	var (
 		response                        = SQLResponse{}
 		tx                              *sql.Tx
@@ -173,7 +173,7 @@ func QueryServiceInstanceConfigurations(db *sql.DB, params url.Values) (data []b
 	if serviceInstanceOrganizationName, err = common.GetRequiredParam(params, "serviceInstanceOrganizationName"); err != nil {
 		return
 	}
-	if response.Data, response.AffectedRows, err = common.QueryJSON(tx, "SELECT * FROM ServiceInstanceConfiguration "+
+	if response.Data, response.AffectedRows, err = common.QueryJSON(tx, "SELECT * FROM ServiceInstanceKey "+
 		"WHERE serviceInstanceName = ? AND serviceInstanceServiceName = ? AND serviceInstanceOrganizationName = ?;",
 		serviceInstanceName, serviceInstanceServiceName, serviceInstanceOrganizationName); err != nil {
 		tx.Rollback()

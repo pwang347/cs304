@@ -75,7 +75,6 @@ func UpdateUser(db *sql.DB, params url.Values) (data []byte, err error) {
 		lastName             string
 		passwordHash         string
 		isAdminStr           string
-		isAdmin              bool
 		twoFactorPhoneNumber string
 		updateStatements		 []string
 	)
@@ -91,24 +90,19 @@ func UpdateUser(db *sql.DB, params url.Values) (data []byte, err error) {
 
 	// At least one param must be specified for the update to be valid
 	if firstName, err = common.GetRequiredParam(params, "firstName"); err != nil {
-		append(updateStatements, "firstName = " + firstName)
+		updateStatements = append(updateStatements, "firstName = " + firstName)
 	}
 	if lastName, err = common.GetRequiredParam(params, "lastName"); err != nil {
-		append(updateStatements, "lastName = " + lastName)
+		updateStatements = append(updateStatements, "lastName = " + lastName)
 	}
 	if passwordHash, err = common.GetRequiredParam(params, "passwordHash"); err != nil {
-		append(updateStatements, "passwordHash = " + passwordHash)
+		updateStatements = append(updateStatements, "passwordHash = " + passwordHash)
 	}
 	if isAdminStr, err = common.GetRequiredParam(params, "isAdmin"); err != nil {
-		if isAdmin, err = strconv.ParseBool(isAdminStr); err != nil {
-			append(updateStatements, "isAdmin = " + isAdmin)
-		}
-		else {
-			return
-		}
+		updateStatements = append(updateStatements, "isAdmin = " + isAdminStr)
 	}
 	if twoFactorPhoneNumber, err = common.GetRequiredParam(params, "twoFactorPhoneNumber"); err != nil {
-		append(updateStatements, "isAdmin = " + isAdmin
+		updateStatements = append(updateStatements, "twoFactorPhoneNumber = " + twoFactorPhoneNumber)
 	}
 
 	if len(updateStatements) < 1 {

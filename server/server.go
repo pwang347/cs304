@@ -104,6 +104,7 @@ var (
 		"isAdmin": queries.UserIsAdminForOrganization,
 		"select":  queries.SelectUser,
 		"update":  queries.UpdateUser,
+		"login":  queries.UserLogin,
 	}
 )
 

@@ -65,7 +65,6 @@ func UpdateUser(db *sql.DB, params url.Values) (data []byte, err error) {
 		firstName            string
 		lastName             string
 		passwordHash         string
-		isAdminStr           string
 		twoFactorPhoneNumber string
 		updateStatements     []string
 	)
@@ -88,9 +87,6 @@ func UpdateUser(db *sql.DB, params url.Values) (data []byte, err error) {
 	}
 	if passwordHash, err = common.GetRequiredParam(params, "passwordHash"); len(passwordHash) > 0 {
 		updateStatements = append(updateStatements, "passwordHash = "+passwordHash)
-	}
-	if isAdminStr, err = common.GetRequiredParam(params, "isAdmin"); len(isAdminStr) > 0 {
-		updateStatements = append(updateStatements, "isAdmin = "+isAdminStr)
 	}
 	if twoFactorPhoneNumber, err = common.GetRequiredParam(params, "twoFactorPhoneNumber"); len(twoFactorPhoneNumber) > 0 {
 		updateStatements = append(updateStatements, "twoFactorPhoneNumber = "+twoFactorPhoneNumber)

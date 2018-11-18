@@ -7,7 +7,7 @@ import DialogContentText from '@material-ui/core/DialogContentText';
 import DialogTitle from '@material-ui/core/DialogTitle';
 import PropTypes from 'prop-types';
 import TextField from '@material-ui/core/TextField';
-import CollectionPicker from './CollectionPicker';
+import CollectionPickerDialog from './CollectionPickerDialog';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import Typography from '@material-ui/core/Typography';
@@ -17,6 +17,7 @@ class CreationDialog extends React.Component {
   state = {
       data: {},
       selectedField: null,
+      collectionPickerDialog: null,
   }
 
   handleClose = (result) => {
@@ -34,7 +35,14 @@ class CreationDialog extends React.Component {
   }
 
   handleSelectField = (field) => {
-    this.setState(state => ({selectedField: field}));
+    this.setState(state => ({selectedField: field,
+    collectionPickerDialog: {
+      title: "Select " + this.state.selectedField.name,
+      onClose: this.handleSelectFieldClose.bind(this),
+      staticdata: this.state.selectedField.options,
+      displayfn: this.state.selectedField.displayfn,
+      keyfn: this.state.selectedField.keyfn,
+    }}));
   }
 
   render() {
@@ -85,13 +93,7 @@ class CreationDialog extends React.Component {
             </Button>
           </DialogActions>
         </Dialog>
-        {this.state.selectedField !== null && <CollectionPicker titleText={"Select " + this.state.selectedField.name}
-                        open={this.state.selectedField !== null}
-                        onClose={this.handleSelectFieldClose.bind(this)}
-                        staticdata={this.state.selectedField.options}
-                        displayfn={this.state.selectedField.displayfn}
-                        keyfn={this.state.selectedField.keyfn}>
-                    </CollectionPicker>}
+        {this.state.selectedField !== null && <CollectionPickerDialog open={this.state.selectedField !== null} dialog={this.state.collectionPickerDialog}/>}
       </div>
     );
   }

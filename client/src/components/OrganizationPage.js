@@ -6,7 +6,7 @@ import { BASE_API_URL } from "../config";
 import Typography from '@material-ui/core/Typography';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
-import CollectionPicker from './CollectionPicker';
+import CollectionPickerDialog from './CollectionPickerDialog';
 
 const styles = theme => ({
     root: {
@@ -98,7 +98,7 @@ class OrganizationPage extends React.Component {
             <List>
                 <ListItem>
                     <Button onClick={this.handleClickOpen}>Select an organization</Button>
-                    {this.state.collectionPickerDialog && <CollectionPicker open={this.state.open} dialog={this.state.collectionPickerDialog}/>}
+                    {this.state.collectionPickerDialog && <CollectionPickerDialog open={this.state.open} dialog={this.state.collectionPickerDialog}/>}
                     <Button variant="contained" color="primary" onClick={this.handleCreate}>
                         Create new organization
                     </Button>

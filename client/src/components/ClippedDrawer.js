@@ -115,7 +115,8 @@ class ClippedDrawer extends React.Component {
         detailViewDialog: null,
         collectionPickerDialog: null,
         addingToGroup: null,
-        userIsAdmin: true,
+        userIsAdmin: false,
+        currentUser: null,
     };
 
     componentDidMount() {
@@ -130,6 +131,7 @@ class ClippedDrawer extends React.Component {
         this.loadAccessGroupUsers();
         this.loadOrganizationUsers();
         this.loadCreditCards();
+        this.loadCurrentUser();
     }
 
     handleClick = (id, data) => {
@@ -157,6 +159,9 @@ class ClippedDrawer extends React.Component {
             if (id === "credit-cards"){
                 this.loadCreditCards();
             }
+            if (id === "my-profile") {
+                this.loadCurrentUser();
+            }
 
             if (id === "service") {
                 this.setState(state => ({serviceOpen: !state.serviceOpen}));
@@ -172,6 +177,25 @@ class ClippedDrawer extends React.Component {
             }
         }
     };
+
+    loadCurrentUser = () => {
+        var url = BASE_API_URL + "/user/select?emailAddress=" + this.props.user.emailAddress;
+        var self = this;
+        fetch(url)
+            .then(function (response) {
+                if (response.status >= 400) {
+                    throw new Error("Bad response from server");
+                }
+                return response.json();
+            })
+            .then(function (json) {
+                if (json.affectedRows > 0) {
+                    self.setState({
+                        currentUser: JSON.parse(json.data)[0]
+                    })
+                }
+            });
+    }
 
     loadAdminFlag = () => {
         var url = BASE_API_URL + "/user/isAdmin?organizationName=" + this.props.organizationName
@@ -1172,6 +1196,48 @@ class ClippedDrawer extends React.Component {
         return 0;
     }
 
+    handleEditUserInfo = () => {
+        this.setState(state => ({creationDialog: {
+                titleText: "Edit Info",
+                fields: [
+                    {name: "First Name"},
+                    {name: "Last Name"},
+                    {name: "New Password"},
+                    {name: "Phone Number"},
+                ],
+                onClose: this.handleCloseForEditUserInfo.bind(undefined),
+            }}));
+    }
+
+    handleCloseForEditUserInfo = (result) => {
+        this.setState(state => ({
+            creationDialog: null,
+        }));
+        if (!result) return;
+        var fn = result["First Name"] ? "&firstName=" + result["First Name"] : "";
+        var ln = result["Last Name"] ? "&lastName=" + result["Last Name"] : "";
+        var pass = result["New Password"] ? "&passwordHash=" + result["New Password"] : "";
+        var phone = result["Phone Number"] ? "&twoFactorPhoneNumber=" + result["Phone Number"] : "";
+        var url = BASE_API_URL + "/user/update?emailAddress=" + this.state.currentUser.emailAddress + fn + ln + pass + phone;
+        var self = this;
+        fetch(url)
+            .then(function (response) {
+                if (response.status >= 400) {
+                    throw new Error("Bad response from server");
+                }
+                return response.json();
+            })
+            .then(function(json) {
+                if (json.hasOwnProperty("error")) {
+                    throw new Error(json.error);
+                }
+                if (json.affectedRows !== 1) {
+                    throw new Error("Could not update user.");
+                }
+                self.loadCurrentUser();
+            });
+    }
+
     handleCloseForCreateVirtualMachine = (serviceName, result) => {
         this.setState(state => ({
             creationDialog: null,
@@ -1219,6 +1285,41 @@ class ClippedDrawer extends React.Component {
             ],
             onClose: this.handleCloseForCreateVirtualMachine.bind(undefined, this.state.activeServiceName),
         }}));
+    }
+
+    handleViewSubscriptionsClose = () => {
+        this.setState(state => ({detailViewDialog: null}));
+    }
+
+    handleViewSubscriptions = () => {
+        this.setState(state => ({detailViewDialog: {
+                title: "Subscription details for " + this.state.activeServiceName,
+                tables: [
+                    {
+                        columns: [
+                            {
+                                name: "Transaction Number",
+                                key: "transactionNumber",
+                            },
+                            {
+                                name: "Amount Paid",
+                                key: "amountPaid",
+                            },
+                            {
+                                name: "Processed Time",
+                                key: "processedTimestamp",
+                            },
+                            {
+                                name: "Active Until",
+                                key: "activeUntil",
+                            },
+                        ],
+                        dataEndpoint: "/service/listSubscriptions?serviceName=" + this.state.activeServiceName +
+                            "&organizationName=" + this.props.organizationName,
+                    },
+                ],
+                onClose: this.handleViewSubscriptionsClose.bind(this)
+            }}));
     }
 
     convertJavaScriptDateToMySQL = (date) => {
@@ -1349,8 +1450,8 @@ class ClippedDrawer extends React.Component {
                     {this.state.activePageId === "store" && <div>
                     <Typography variant="headline" gutterBottom>Hello, {this.props.user.firstName}!</Typography>
                         {this.state.services.map(function (service, idx) {
-                            return (<Card className={classes.card} key={service.name} onClick={this.handleShowServiceDetails.bind(this, service.name)}>
-                                <CardActionArea>
+                            return (<Card className={classes.card} key={service.name} >
+                                <CardActionArea onClick={this.handleShowServiceDetails.bind(this, service.name)}>
                                     <CardMedia
                                         className={classes.media}
                                         image={(!service.imageUrl) ? defaultImageUrl : service.imageUrl}
@@ -1414,6 +1515,9 @@ class ClippedDrawer extends React.Component {
                         <Button variant="contained" color="primary" onClick={this.handleCreateVirtualMachine}>
                             Create new virtual machine
                         </Button>
+                            <Button variant="contained" color="primary" onClick={this.handleViewSubscriptions}>
+                                View Subscriptions/Transactions
+                            </Button>
                         </div>
                         :
                         <div>
@@ -1450,6 +1554,9 @@ class ClippedDrawer extends React.Component {
                         <Button variant="contained" color="primary" onClick={this.handleCreateServiceInstance}>
                             Create new instance
                         </Button>
+                            <Button variant="contained" color="primary" onClick={this.handleViewSubscriptions}>
+                                View Subscriptions/Transactions
+                            </Button>
                         </div>)}
                     {this.state.activePageId === "virtual-machines" && <div>
                         {this.state.organizationVirtualMachines.map(function (virtualMachine, idx) {
@@ -1618,7 +1725,6 @@ class ClippedDrawer extends React.Component {
                                                 <TableCell>Last name</TableCell>
                                                 <TableCell>Email address</TableCell>
                                                 <TableCell>Phone number</TableCell>
-                                                <TableCell>Admin</TableCell>
                                                 <TableCell></TableCell>
                                                 <TableCell></TableCell>
                                             </TableRow>
@@ -1631,13 +1737,13 @@ class ClippedDrawer extends React.Component {
                                                         <TableCell>{user.lastName}</TableCell>
                                                         <TableCell>{user.emailAddress}</TableCell>
                                                         <TableCell>{user.twoFactorPhoneNumber}</TableCell>
-                                                        <TableCell>{user.emailAddress !== this.props.user.emailAddress
+                                                        <TableCell>{(this.state.userIsAdmin && user.emailAddress !== this.props.user.emailAddress)
                                                         && (user.isAdmin?
-                                                        <Button onClick={this.handleSetUserAdmin.bind(this, user.emailAddress, false)}>Remove admin</Button>
+                                                        <Button size="small" color="primary" onClick={this.handleSetUserAdmin.bind(this, user.emailAddress, false)}>Remove admin</Button>
                                                         :
-                                                        <Button onClick={this.handleSetUserAdmin.bind(this, user.emailAddress, true)}>Make admin</Button>)}</TableCell>
-                                                        <TableCell>{user.emailAddress !== this.props.user.emailAddress &&
-                                                        <Button onClick={this.handleDeleteUserFromOrganization.bind(this, user.emailAddress)}>Delete</Button>}</TableCell>
+                                                        <Button size="small" color="primary" onClick={this.handleSetUserAdmin.bind(this, user.emailAddress, true)}>Make admin</Button>)}</TableCell>
+                                                        <TableCell>{(this.state.userIsAdmin && user.emailAddress !== this.props.user.emailAddress) &&
+                                                        <Button size="small" color="primary" onClick={this.handleDeleteUserFromOrganization.bind(this, user.emailAddress)}>Delete</Button>}</TableCell>
                                                     </TableRow>
                                                 )}.bind(this))}
                                         </TableBody>
@@ -1646,11 +1752,32 @@ class ClippedDrawer extends React.Component {
                             </Grid>
                         </Grid>
                     </div>}
-                    {this.state.activePageId === "my-profile" && <Typography paragraph>
+                    {this.state.activePageId === "my-profile" && <div>
                         <Button onClick={this.handleClickChangeOrganization}>
                             Change organization
                         </Button>
-                    </Typography>}
+                        <Grid container spacing={24}>
+                            <Grid item xs={24}>
+                                <Paper>
+                                    <List component="nav">
+                                        <ListItem>
+                                            <ListItemText primary="User Email Address: " secondary={this.state.currentUser.emailAddress}/>
+                                        </ListItem>
+                                        <ListItem>
+                                            <ListItemText primary="First Name: " secondary={this.state.currentUser.firstName}/>
+                                        </ListItem>
+                                        <ListItem>
+                                            <ListItemText primary="Last Name: " secondary={this.state.currentUser.lastName}/>
+                                        </ListItem>
+                                        <ListItem>
+                                            <ListItemText primary="Phone Number: " secondary={this.state.currentUser.twoFactorPhoneNumber}/>
+                                        </ListItem>
+                                    </List>
+                                </Paper>
+                                <Button onClick={this.handleEditUserInfo}>Edit User Information</Button>
+                            </Grid>
+                        </Grid>
+                    </div>}
                     {this.state.detailViewDialog !== null &&
                     <DetailViewDialog open={this.state.detailViewDialog !== null} dialog={this.state.detailViewDialog}/>
                     }

@@ -172,3 +172,28 @@ func QueryVirtualMachineServiceOrganization(db *sql.DB, params url.Values) (data
 	data, err = json.Marshal(response)
 	return
 }
+
+func QueryMostPopularVMImage(db *sql.DB, params url.Values) (data []byte, err error) {
+	var (
+		response		= SQLResponse{}
+		tx					*sql.Tx
+	)
+
+	if tx, err = db.Begin(); err != nil {
+		return nil, err
+	}
+
+	if response.Data, response.AffectedRows, err = common.QueryJSON(tx,
+		"SELECT baseImageOs AS os, baseImageVersion AS version FROM VirtualMachine" +
+		"GROUP BY baseImageOs, baseImageVersion HAVING COUNT(*) = (" +
+			"SELECT MAX(osCount) FROM (" +
+				"SELECT COUNT(*) AS osCount FROM VirtualMachine GROUP BY baseImageOs, baseImageVersion))"); err != nil {
+		tx.Rollback()
+		return
+	}
+	if err = tx.Commit(); err != nil {
+		return
+	}
+	data, err = json.Marshal(response)
+	return
+}

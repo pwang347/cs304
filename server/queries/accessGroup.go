@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"net/url"
+	"strings"
 
 	"github.com/pwang347/cs304/server/common"
 )
@@ -71,11 +72,11 @@ func UpdateAccessGroup(db *sql.DB, params url.Values) (data []byte, err error) {
 		updateStatements = append(updateStatements, "organizationName = " + newOrganization)
 	}
 
-	if len(updateStatements) < 1) {
+	if len(updateStatements) < 1 {
 		return
 	}
 
-	if result, err = tx.Exec("UPDATE AccessGroup SET " + string.Join(updateStatements, ", ") + " WHERE name = ? AND organizationName = ?;",
+	if result, err = tx.Exec("UPDATE AccessGroup SET " + strings.Join(updateStatements, ", ") + " WHERE name = ? AND organizationName = ?;",
 		name, organizationName); err != nil {
 		tx.Rollback()
 	}

@@ -35,6 +35,9 @@ var (
 		"listOrganization":         queries.QueryAccessGroupOrganization,
 		"listUsersForOrganization": queries.QueryAccessGroupUserPairsOrganization,
 	}
+	baseImageQueries = map[string]query{
+		"list": queries.QueryAllBaseImages,
+	}
 	creditCardQueries = map[string]query{
 		"create":                 queries.CreateCreditCard,
 		"delete":                 queries.DeleteCreditCard,
@@ -80,9 +83,10 @@ var (
 		"listTransactions":        queries.ListAllCompletedTransactions,
 	}
 	virtualMachineQueries = map[string]query{
-		"create":           queries.CreateVirtualMachine,
-		"delete":           queries.DeleteVirtualMachine,
-		"listOrganization": queries.QueryVirtualMachineOrganization,
+		"create":                  queries.CreateVirtualMachine,
+		"delete":                  queries.DeleteVirtualMachine,
+		"listOrganization":        queries.QueryVirtualMachineOrganization,
+		"listServiceOrganization": queries.QueryVirtualMachineServiceOrganization,
 	}
 	userQueries = map[string]query{
 		"create": queries.CreateUser,
@@ -161,6 +165,7 @@ func main() {
 
 	r := mux.NewRouter()
 	r.HandleFunc("/api/accessGroup/{query}", mapJSONEndpoints(accessGroupQueries))
+	r.HandleFunc("/api/baseImage/{query}", mapJSONEndpoints(baseImageQueries))
 	r.HandleFunc("/api/creditCard/{query}", mapJSONEndpoints(creditCardQueries))
 	r.HandleFunc("/api/organization/{query}", mapJSONEndpoints(organizationQueries))
 	r.HandleFunc("/api/region/{query}", mapJSONEndpoints(regionQueries))

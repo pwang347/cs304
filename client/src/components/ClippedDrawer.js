@@ -37,12 +37,12 @@ import TableBody from '@material-ui/core/TableBody';
 import TableCell from '@material-ui/core/TableCell';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
-import ViewServiceInstanceDialog from './ViewServiceInstanceDialog';
 import ConfirmationDialog from './ConfirmationDialog';
 import CollectionPicker from './CollectionPicker';
 import CreationDialog from './CreationDialog';
 import PlayArrow from '@material-ui/icons/PlayArrow';
 import ListSubheader from "@material-ui/core/ListSubheader/ListSubheader";
+import DetailViewDialog from './DetailViewDialog';
 
 const drawerWidth = 300;
 
@@ -96,8 +96,10 @@ class ClippedDrawer extends React.Component {
         services: [],
         servicesMap: {},
         regions: [],
+        baseImages: [],
         organizationServiceInstances: [],
         organizationVirtualMachines: [],
+        virtualMachinesMap: {},
         organizationActiveSubscriptions: [],
         organizationTransactions: [],
         organizationAccessGroups: [],
@@ -108,11 +110,13 @@ class ClippedDrawer extends React.Component {
         serviceInstancesMap: {},
         confirmationDialog: null,
         creationDialog: null,
+        detailViewDialog: null,
         addingToGroup: null,
     };
 
     componentDidMount() {
         this.loadRegions();
+        this.loadBaseImages();
         this.loadServices();
         this.loadOrganizationVirtualMachines();
         this.loadActiveServices();
@@ -205,6 +209,25 @@ class ClippedDrawer extends React.Component {
             });
     }
 
+    loadBaseImages = () => {
+        var url = BASE_API_URL + "/baseImage/list";
+        var self = this;
+        fetch(url)
+            .then(function (response) {
+                if (response.status >= 400) {
+                    throw new Error("Bad response from server");
+                }
+                return response.json();
+            })
+            .then(function (json) {
+                if (json.affectedRows > 0) {
+                    self.setState({
+                        baseImages: JSON.parse(json.data)
+                    });
+                }
+            });
+    }
+
     loadActiveServices = () => {
         var url = BASE_API_URL + "/serviceSubscriptionTransaction/listActiveSubscriptions?organizationName=" + this.props.organizationName;
         var self = this;
@@ -269,8 +292,10 @@ class ClippedDrawer extends React.Component {
             });
     }
 
-    loadOrganizationVirtualMachines = () => {
-        var url = BASE_API_URL + "/virtualMachine/listOrganization?organizationName=" + this.props.organizationName;
+    loadOrganizationVirtualMachines = (serviceName) => {
+        var url =  BASE_API_URL + ((serviceName != null) ? "/virtualMachine/listServiceOrganization?organizationName=" + this.props.organizationName
+        + "&virtualMachineServiceName=" + serviceName
+        : "/virtualMachine/listOrganization?organizationName=" + this.props.organizationName);
         var self = this;
         fetch(url)
             .then(function (response) {
@@ -280,9 +305,13 @@ class ClippedDrawer extends React.Component {
                 return response.json();
             })
             .then(function (json) {
+                var virtualMachines = JSON.parse(json.data);
                 self.setState({
-                    organizationVirtualMachines: JSON.parse(json.data)
+                    organizationVirtualMachines: virtualMachines
                 });
+                for (var virtualMachine of virtualMachines) {
+                    self.state.virtualMachinesMap[virtualMachine.ipAddress] = virtualMachine;
+                }
             });
     }
 
@@ -343,15 +372,145 @@ class ClippedDrawer extends React.Component {
                 for (var service of services) {
                     self.state.servicesMap[service.name] = service;
                 }
+                console.log(services);
             });
     }
 
-    handleServiceInstanceDetails = (serviceInstanceName) => {
-        this.setState(state => ({displayedServiceInstance: this.state.serviceInstancesMap[serviceInstanceName]}));
+    handleServiceInstanceDetailsClose = () => {
+        this.setState(state => ({detailViewDialog: null}));
     }
 
-    handleServiceInstanceDetailsClose = () => {
-        this.setState(state => ({displayedServiceInstance: null}));
+    handleServiceInstanceDetails = (serviceInstanceName) => {
+        var serviceInstance = this.state.serviceInstancesMap[serviceInstanceName];
+        this.setState(state => ({detailViewDialog: {
+                title: "Details for " + serviceInstanceName,
+                tables: [
+                    {
+                        title: "Overview",
+                        columns: [
+                            {
+                                name: "Service",
+                                key: "serviceName",
+                            },
+                            {
+                                name: "Region",
+                                key: "regionName",
+                            },
+                        ],
+                        staticdata: [
+                            {
+                                serviceName: serviceInstance.serviceName,
+                                regionName: serviceInstance.regionName,
+                            }
+                        ],
+                    },
+                    {
+                        title: "Configurations",
+                        columns: [
+                            {
+                                name: "Configuration Key",
+                                key: "configKey",
+                            },
+                            {
+                                name: "Value",
+                                key: "data",
+                            },
+                        ],
+                        dataEndpoint: "/serviceInstanceConfiguration/listForServiceInstance?serviceInstanceName=" + serviceInstanceName +
+                        "&serviceInstanceServiceName=" + serviceInstance.serviceName +
+                        "&serviceInstanceOrganizationName=" + this.props.organizationName,
+                    },
+                    {
+                        title: "Keys",
+                        columns: [
+                            {
+                                name: "Key",
+                                key: "keyValue",
+                            },
+                            {
+                                name: "Active until",
+                                key: "activeUntil",
+                            },
+                        ],
+                        dataEndpoint: "/serviceInstanceKey/listForServiceInstance?serviceInstanceName=" + serviceInstanceName +
+                        "&serviceInstanceServiceName=" + serviceInstance.serviceName +
+                        "&serviceInstanceOrganizationName=" + this.props.organizationName,
+                    }
+                ],
+                onClose: this.handleServiceInstanceDetailsClose.bind(this)
+            }}));
+    }
+
+    handleVirtualMachineDetailsClose = () => {
+        this.setState(state => ({detailViewDialog: null}));
+    }
+
+    handleVirtualMachineDetails = (virtualMachineIpAddress) => {
+        var virtualMachine = this.state.virtualMachinesMap[virtualMachineIpAddress];
+        this.setState(state => ({detailViewDialog: {
+                title: "Details for " + virtualMachineIpAddress,
+                tables: [
+                    {
+                        title: "Overview",
+                        columns: [
+                            {
+                                name: "Service",
+                                key: "serviceName",
+                            },
+                            {
+                                name: "Region",
+                                key: "regionName",
+                            },
+                        ],
+                        staticdata: [
+                            {
+                                serviceName: virtualMachine.virtualMachineServiceName,
+                                regionName: virtualMachine.regionName,
+                            }
+                        ],
+                    },
+                    {
+                        title: "Hardware",
+                        columns: [
+                            {
+                                name: "State",
+                                key: "state",
+                            },
+                            {
+                                name: "Cores",
+                                key: "cores",
+                            },
+                            {
+                                name: "Disk space",
+                                key: "diskSpace",
+                            },
+                            {
+                                name: "RAM",
+                                key: "ram",
+                            },
+                            {
+                                name: "Operating system",
+                                key: "baseImageOs",
+                            },
+                            {
+                                name: "OS Version",
+                                key: "baseImageVersion",
+                            },
+                        ],
+                        staticdata: [
+                            {
+                                state: virtualMachine.state,
+                                cores: virtualMachine.cores,
+                                diskSpace: virtualMachine.diskSpace,
+                                ram: virtualMachine.ram,
+                                baseImageOs: virtualMachine.baseImageOs,
+                                baseImageVersion: virtualMachine.baseImageVersion,
+                            }
+                        ],
+                    },
+                ],
+                onClose: this.handleVirtualMachineDetailsClose.bind(this)
+            }}));
     }
 
     handleCloseForDeleteServiceInstance = (serviceInstanceName, result) => {
@@ -392,6 +551,47 @@ class ClippedDrawer extends React.Component {
                 yesText: "Yes",
                 noText: "No",
                 onClose: this.handleCloseForDeleteServiceInstance.bind(undefined, serviceInstanceName)
+            }}));
+            return;
+        }
+    }
+
+    handleCloseForDeleteVirtualMachine = (virtualMachineIp, result) => {
+        this.setState(state => ({
+            confirmationDialog: null,
+        }));
+        if (!result) return;
+        this.setState(state => ({deleteVirtualMachineConfirmed: false}));
+        var virtualMachine = this.state.virtualMachinesMap[virtualMachineIp];
+        var url = BASE_API_URL + "/virtualMachine/delete?ipAddress=" + virtualMachineIp;
+        var self = this;
+        fetch(url)
+            .then(function (response) {
+                if (response.status >= 400) {
+                    throw new Error("Bad response from server");
+                }
+                return response.json();
+            })
+            .then(function (json) {
+                if (json.affectedRows !== 1) {
+                    throw new Error("Nothing to delete on server");
+                }
+        });
+        var index = this.state.organizationVirtualMachines.indexOf(virtualMachine);
+        if (index > -1) {
+            this.state.organizationVirtualMachines.splice(index, 1);
+        }
+        delete this.state.virtualMachinesMap[virtualMachineIp];
+    }
+
+    handleDeleteVirtualMachine = (virtualMachineIp) => {
+        if (this.state.confirmationDialog === null && !this.state.deleteVirtualMachineConfirmed) {
+            this.setState(state => ({confirmationDialog: {
+                titleText: "Are you sure you want to delete " + virtualMachineIp + "?",
+                contentText: "This action cannot be reversed.",
+                yesText: "Yes",
+                noText: "No",
+                onClose: this.handleCloseForDeleteVirtualMachine.bind(undefined, virtualMachineIp)
             }}));
             return;
         }
@@ -708,6 +908,55 @@ class ClippedDrawer extends React.Component {
         //     }}));
     }
 
+    handleCloseForCreateVirtualMachine = (serviceName, result) => {
+        this.setState(state => ({
+            creationDialog: null,
+        }));
+        if (!result) return;
+        var baseImage = result["Base image"].split(" ");
+        var url = BASE_API_URL + "/virtualMachine/create?description=" + result["Description"]
+        + "&regionName=" + result["Region"]
+        + "&cores=" + result["Cores"]
+        + "&diskSpace=" + result["Disk space"]
+        + "&ram=" + result["RAM"]
+        + "&baseImageOs=" + baseImage[0]
+        + "&baseImageVersion=" + baseImage[1]
+        + "&virtualMachineServiceName=" + serviceName
+        + "&organizationName=" + this.props.organizationName;
+        var self = this;
+        fetch(url)
+            .then(function (response) {
+                if (response.status >= 400) {
+                    throw new Error("Bad response from server");
+                }
+                return response.json();
+            })
+            .then(function(json) {
+                if (json.hasOwnProperty("error")) {
+                    throw new Error(json.error);
+                }
+                if (json.affectedRows !== 1) {
+                    throw new Error("Could not add service instance.");
+                }
+                self.loadOrganizationVirtualMachines(serviceName);
+            });
+    }
+
+    handleCreateVirtualMachine = () => {
+        this.setState(state => ({creationDialog: {
+            titleText: "Create a new virtual machine for " + this.state.activeServiceName,
+            fields: [
+                {name: "Description"},
+                {name: "Cores", options: [1, 2, 4], keyfn: r => r, displayfn: r => r},
+                {name: "Disk space", options: [128, 256, 512, 1024], keyfn: r => r, displayfn: r => r},
+                {name: "RAM", options: [1, 4, 8, 16], keyfn: r => r, displayfn: r => r},
+                {name: "Region", options: this.state.regions, keyfn: r => r.name, displayfn: r => r.name},
+                {name: "Base image", options: this.state.baseImages, keyfn: r => r.os + " " + r.version, displayfn: r => r.os + " " + r.version},
+            ],
+            onClose: this.handleCloseForCreateVirtualMachine.bind(undefined, this.state.activeServiceName),
+        }}));
+    }
+
     render() {
         const {classes} = this.props;
 
@@ -853,7 +1102,43 @@ class ClippedDrawer extends React.Component {
                             </Card>)
                         }.bind(this))}
                     </div>}
-                    {this.state.activePageId === "instances" && <div>
+                    {this.state.activePageId === "instances" &&
+                        (this.state.servicesMap[this.state.activeServiceName].isVirtualMachineService === "1"?
+                        <div>
+                        {this.state.organizationVirtualMachines.map(function (virtualMachine, idx) {
+                            return (<Card className={classes.card} key={virtualMachine.ipAddress}>
+                                <CardActionArea>
+                                    <CardMedia
+                                        className={classes.media}
+                                        image={defaultImageUrl}
+                                        title="Contemplative Reptile"
+                                    />
+                                    <CardContent>
+                                        <Typography gutterBottom variant="h5" component="h2">
+                                            {virtualMachine.ipAddress}
+                                        </Typography>
+                                        <Typography component="p">
+                                            {virtualMachine.description}
+                                        </Typography>
+                                    </CardContent>
+                                </CardActionArea>
+                                <CardActions>
+                                    <Button size="small" color="primary" onClick={this.handleVirtualMachineDetails.bind(this, virtualMachine.ipAddress)}>
+                                        View details
+                                    </Button>
+                                    <Button size="small" color="primary" onClick={this.handleDeleteVirtualMachine.bind(this, virtualMachine.ipAddress)}>
+                                        Terminate
+                                    </Button>
+                                </CardActions>
+                            </Card>)
+                        }.bind(this))}
+                        <br/>
+                        <Button variant="contained" color="primary" onClick={this.handleCreateVirtualMachine}>
+                            Create new virtual machine
+                        </Button>
+                        </div>
+                        :
+                        <div>
                         {this.state.organizationServiceInstances.map(function (serviceInstance, idx) {
                             return (<Card className={classes.card} key={serviceInstance.name}>
                                 <CardActionArea>
@@ -887,7 +1172,7 @@ class ClippedDrawer extends React.Component {
                         <Button variant="contained" color="primary" onClick={this.handleCreateServiceInstance}>
                             Create new instance
                         </Button>
-                    </div>}
+                        </div>)}
                     {this.state.activePageId === "virtual-machines" && <div>
                         {this.state.organizationVirtualMachines.map(function (virtualMachine, idx) {
                             return (<Card className={classes.card} key={virtualMachine.ipAddress}>
@@ -907,15 +1192,15 @@ class ClippedDrawer extends React.Component {
                                     </CardContent>
                                 </CardActionArea>
                                 <CardActions>
-                                    <Button size="small" color="primary">
+                                    <Button size="small" color="primary" onClick={this.handleVirtualMachineDetails.bind(this, virtualMachine.ipAddress)}>
                                         View details
                                     </Button>
-                                    <Button size="small" color="primary">
+                                    <Button size="small" color="primary" onClick={this.handleDeleteVirtualMachine.bind(this, virtualMachine.ipAddress)}>
                                         Terminate
                                     </Button>
                                 </CardActions>
                             </Card>)
-                        })}
+                        }.bind(this))}
                     </div>}
                     {this.state.activePageId === "billing" &&
                         <Grid container spacing={24}>
@@ -1044,10 +1329,8 @@ class ClippedDrawer extends React.Component {
                             Change organization
                         </Button>
                     </Typography>}
-                    {this.state.displayedServiceInstance !== null &&
-                    <ViewServiceInstanceDialog open={this.state.displayedServiceInstance}
-                                               onClose={this.handleServiceInstanceDetailsClose}
-                                               serviceInstance={this.state.displayedServiceInstance}/>
+                    {this.state.detailViewDialog !== null &&
+                    <DetailViewDialog open={this.state.detailViewDialog !== null} dialog={this.state.detailViewDialog}/>
                     }
                     {this.state.confirmationDialog !== null &&
                     <ConfirmationDialog dialog={this.state.confirmationDialog}/>

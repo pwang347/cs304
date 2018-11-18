@@ -9,16 +9,14 @@ import (
 	"github.com/pwang347/cs304/server/common"
 )
 
-// creates a new virtual machine
+// CreateVirtualMachine creates a new virtual machine
 func CreateVirtualMachine(db *sql.DB, params url.Values) (data []byte, err error) {
 	var (
 		result                    sql.Result
 		response                  = SQLResponse{}
 		tx                        *sql.Tx
-		ipAddress                 string
+		ipAddress                 = common.GenerateIPAddress()
 		description               string
-		stateStr                  string
-		state                     int
 		coresStr                  string
 		cores                     int
 		diskSpaceStr              string
@@ -35,16 +33,7 @@ func CreateVirtualMachine(db *sql.DB, params url.Values) (data []byte, err error
 	if tx, err = db.Begin(); err != nil {
 		return nil, err
 	}
-	if ipAddress, err = common.GetRequiredParam(params, "ipAddress"); err != nil {
-		return
-	}
 	if description, err = common.GetRequiredParam(params, "description"); err != nil {
-		return
-	}
-	if stateStr, err = common.GetRequiredParam(params, "state"); err != nil {
-		return
-	}
-	if state, err = strconv.Atoi(stateStr); err != nil {
 		return
 	}
 	if coresStr, err = common.GetRequiredParam(params, "cores"); err != nil {
@@ -84,7 +73,7 @@ func CreateVirtualMachine(db *sql.DB, params url.Values) (data []byte, err error
 		"INSERT INTO VirtualMachine "+
 			"(description, ipAddress, state, cores, diskSpace, ram, baseImageOs, baseImageVersion, regionName, organizationName, virtualMachineServiceName)"+
 			" VALUES(?,?,?,?,?,?,?,?,?,?,?);",
-		description, ipAddress, state, cores, diskSpace, ram, baseImageOS, baseImageVersion, regionName, organizationName, virtualMachineServiceName); err != nil {
+		description, ipAddress, 0, cores, diskSpace, ram, baseImageOS, baseImageVersion, regionName, organizationName, virtualMachineServiceName); err != nil {
 		tx.Rollback()
 		return
 	}
@@ -98,7 +87,7 @@ func CreateVirtualMachine(db *sql.DB, params url.Values) (data []byte, err error
 	return
 }
 
-// deletes a virtual machine
+// DeleteVirtualMachine deletes a virtual machine
 func DeleteVirtualMachine(db *sql.DB, params url.Values) (data []byte, err error) {
 	var (
 		result    sql.Result
@@ -144,6 +133,36 @@ func QueryVirtualMachineOrganization(db *sql.DB, params url.Values) (data []byte
 	}
 	if response.Data, response.AffectedRows, err = common.QueryJSON(tx, "SELECT * FROM VirtualMachine "+
 		"WHERE organizationName = ?;", organizationName); err != nil {
+		tx.Rollback()
+		return
+	}
+	if err = tx.Commit(); err != nil {
+		return
+	}
+	data, err = json.Marshal(response)
+	return
+}
+
+// QueryVirtualMachineServiceOrganization queries from virtual machine for organization and service pair
+func QueryVirtualMachineServiceOrganization(db *sql.DB, params url.Values) (data []byte, err error) {
+	var (
+		response                  = SQLResponse{}
+		tx                        *sql.Tx
+		organizationName          string
+		virtualMachineServiceName string
+	)
+
+	if tx, err = db.Begin(); err != nil {
+		return nil, err
+	}
+	if organizationName, err = common.GetRequiredParam(params, "organizationName"); err != nil {
+		return
+	}
+	if virtualMachineServiceName, err = common.GetRequiredParam(params, "virtualMachineServiceName"); err != nil {
+		return
+	}
+	if response.Data, response.AffectedRows, err = common.QueryJSON(tx, "SELECT * FROM VirtualMachine "+
+		"WHERE organizationName = ? AND virtualMachineServiceName = ?;", organizationName, virtualMachineServiceName); err != nil {
 		tx.Rollback()
 		return
 	}

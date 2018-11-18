@@ -66,7 +66,8 @@ var (
 		"list": queries.QueryAllRegions,
 	}
 	serviceQueries = map[string]query{
-		"list": queries.QueryAllServices,
+		"list":              queries.QueryAllServices,
+		"listSubscriptions": queries.GetServiceSubscriptions,
 	}
 	serviceInstanceQueries = map[string]query{
 		"create":                  queries.CreateServiceInstance,
@@ -102,7 +103,7 @@ var (
 		"delete":  queries.DeleteUser,
 		"isAdmin": queries.UserIsAdminForOrganization,
 		"select":  queries.SelectUser,
-		"login":   queries.UserLogin,
+		"update":  queries.UpdateUser,
 	}
 )
 

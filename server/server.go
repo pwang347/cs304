@@ -109,6 +109,11 @@ var (
 	eventLogQueries = map[string]query{
 		"byVirtualMachine": queries.QueryEventLogsForVirtualMachine,
 	}
+	virtualMachineAccessGroupPermissionQueries = map[string]query{
+		"create": queries.CreateVirtualMachineAccessGroupPermission,
+		"delete": queries.DeleteVirtualMachineAccessGroupPermission,
+		"byVirtualMachine": queries.QueryVirtualMachineAccessGroupPermissions,
+	}
 )
 
 type (
@@ -193,6 +198,7 @@ func main() {
 	r.HandleFunc("/api/virtualMachine/{query}", mapJSONEndpoints(virtualMachineQueries))
 	r.HandleFunc("/api/user/{query}", mapJSONEndpoints(userQueries))
 	r.HandleFunc("/api/eventLogs/{query}", mapJSONEndpoints(eventLogQueries))
+	r.HandleFunc("/api/virtualMachineAccessGroupPermissions/{query}", mapJSONEndpoints(virtualMachineAccessGroupPermissionQueries))
 	http.Handle("/", r)
 
 	fmt.Println(fmt.Sprintf("Starting webserver at http://0.0.0.0:%d...", *port))

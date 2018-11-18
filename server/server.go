@@ -92,6 +92,7 @@ var (
 		"listActiveSubscriptions": 		queries.ListAllActiveServiceSubscriptionTransactions,
 		"listTransactions":        		queries.ListAllCompletedTransactions,
 		"listCurrentMonthTransactions": queries.GetTransactionsForCurrentMonth,
+		"listExpiredSubscriptions":		queries.GetExpiredServiceSubscriptions,
 	}
 	virtualMachineQueries = map[string]query{
 		"create":                  queries.CreateVirtualMachine,

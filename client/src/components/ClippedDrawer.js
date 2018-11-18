@@ -107,6 +107,7 @@ class ClippedDrawer extends React.Component {
         organizationCurrentMonthTransactions: [],
         organizationAccessGroups: [],
         organizationCreditCards: [],
+        organizationExpiredSubscriptions: [],
         activeSubscriptionsMap: {},
         accessGroupsMap: {},
         organizationUsers: [],
@@ -136,6 +137,7 @@ class ClippedDrawer extends React.Component {
         this.loadCreditCards();
         this.loadCurrentUser();
         this.loadCurrentMonthTransactions();
+        this.loadExpiredSubscriptions();
     }
 
     handleClick = (id, data) => {
@@ -156,6 +158,7 @@ class ClippedDrawer extends React.Component {
                 this.loadActiveServices();
                 this.loadTransactions();
                 this.loadCurrentMonthTransactions();
+                this.loadExpiredSubscriptions();
             }
             if (id === "access-groups"){
                 this.loadAccessGroups();
@@ -323,6 +326,29 @@ class ClippedDrawer extends React.Component {
                     self.setState({
                         organizationActiveSubscriptions: organizationActiveSubscriptions,
                         activeSubscriptionsMap: self.state.activeSubscriptionsMap
+                    });
+                }
+            });
+    }
+
+    loadExpiredSubscriptions = () => {
+        var url = BASE_API_URL + "/serviceSubscriptionTransaction/listExpiredSubscriptions?organizationName=" + this.props.organizationName;
+        var self = this;
+        fetch(url)
+            .then(function (response) {
+                if (response.status >= 400) {
+                    throw new Error("Bad response from server");
+                }
+                return response.json();
+            })
+            .then(function (json) {
+                if (json.affectedRows > 0) {
+                    self.setState({
+                        organizationExpiredSubscriptions: JSON.parse(json.data)
+                    });
+                } else {
+                    self.setState({
+                        organizationExpiredSubscriptions: []
                     });
                 }
             });
@@ -1839,6 +1865,35 @@ class ClippedDrawer extends React.Component {
                                                 Total: {this.calculateTotalForCurrentMonthTransaction()}
                                             </TableRow>
                                         </TableFooter>
+                                    </Table>
+                                </Paper>
+                            </Grid>
+                            <Grid item xs={12} sm={12}>
+                                <Typography variant="headline" gutterBottom>Expired Subscriptions</Typography>
+                                <Paper className={classes.paper}>
+                                    <Table className={classes.table}>
+                                        <TableHead>
+                                            <TableRow>
+                                                <TableCell>Service Name</TableCell>
+                                                <TableCell numeric>Service Type</TableCell>
+                                                <TableCell>Description</TableCell>
+                                                <TableCell>Active Until</TableCell>
+                                            </TableRow>
+                                        </TableHead>
+                                        <TableBody>
+                                            {this.state.organizationExpiredSubscriptions.map(function (activeSub, idx) {
+                                                return (
+                                                    <TableRow key={activeSub.serviceName}>
+                                                        <TableCell component="th" scope="row">
+                                                            {activeSub.serviceName}
+                                                        </TableCell>
+                                                        <TableCell numeric>{activeSub.type}</TableCell>
+                                                        <TableCell>{activeSub.description}</TableCell>
+                                                        <TableCell>{activeSub.activeUntil}</TableCell>
+                                                    </TableRow>
+                                                )
+                                            })}
+                                        </TableBody>
                                     </Table>
                                 </Paper>
                             </Grid>

@@ -197,3 +197,31 @@ func GetTransactionsForCurrentMonth(db *sql.DB, params url.Values) (data []byte,
 	data, err = json.Marshal(response)
 	return
 }
+
+// expired service subscriptions
+func GetExpiredServiceSubscriptions(db *sql.DB, params url.Values) (data []byte, err error) {
+	var (
+		response         = SQLResponse{}
+		tx               *sql.Tx
+		organizationName string
+	)
+
+	if tx, err = db.Begin(); err != nil {
+		return
+	}
+	if organizationName, err = common.GetRequiredParam(params, "organizationName"); err != nil {
+		return
+	}
+	if response.Data, response.AffectedRows, err = common.QueryJSON(tx,
+		"SELECT * FROM ServiceSubscriptionTransaction WHERE organizationName = ? " +
+			"AND activeUntil < NOW() ;",
+		organizationName); err != nil {
+		tx.Rollback()
+		return
+	}
+	if err = tx.Commit(); err != nil {
+		return
+	}
+	data, err = json.Marshal(response)
+	return
+}

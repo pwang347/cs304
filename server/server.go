@@ -40,6 +40,7 @@ var (
 		"delete":                 queries.DeleteCreditCard,
 		"addToOrganization":      queries.AddCreditCardToOrganization,
 		"removeFromOrganization": queries.RemoveCreditCardFromOrganization,
+		"listCreditCards": 		  queries.ListAllCreditCards,
 	}
 	organizationQueries = map[string]query{
 		"create":                            queries.CreateOrganization,

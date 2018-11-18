@@ -42,6 +42,7 @@ import ConfirmationDialog from './ConfirmationDialog';
 import CollectionPicker from './CollectionPicker';
 import CreationDialog from './CreationDialog';
 import PlayArrow from '@material-ui/icons/PlayArrow';
+import ListSubheader from "@material-ui/core/ListSubheader/ListSubheader";
 
 const drawerWidth = 300;
 
@@ -100,10 +101,11 @@ class ClippedDrawer extends React.Component {
         organizationActiveSubscriptions: [],
         organizationTransactions: [],
         organizationAccessGroups: [],
+        organizationCreditCards: [],
         activeSubscriptionsMap: {},
+        accessGroupsMap: {},
         displayedServiceInstance: null,
         serviceInstancesMap: {},
-        accessGroupsMap: {},
         confirmationDialog: null,
         creationDialog: null,
         addingToGroup: null,
@@ -141,6 +143,9 @@ class ClippedDrawer extends React.Component {
                 this.loadAccessGroups();
                 this.loadAccessGroupUsers();
             }
+            if (id === "credit-cards"){
+                this.loadCreditCards();
+            }
 
             if (id === "service") {
                 this.setState(state => ({serviceOpen: !state.serviceOpen}));
@@ -155,6 +160,30 @@ class ClippedDrawer extends React.Component {
                 this.setState(state => ({activePageId: id}));
             }
         }
+    };
+
+    loadCreditCards = () => {
+        var url = BASE_API_URL + "/creditCard/listCreditCards?organizationName=" + this.props.organizationName;
+        var self = this;
+        fetch(url)
+            .then(function (response) {
+                if (response.status >= 400) {
+                    throw new Error("Bad response from server");
+                }
+                return response.json();
+            })
+            .then(function (json) {
+                if (json.affectedRows > 0) {
+                    var creditCards = JSON.parse(json.data);
+                    self.setState({
+                        organizationCreditCards: creditCards
+                    });
+                } else {
+                    self.setState({
+                        organizationCreditCards: []
+                    });
+                }
+            });
     };
 
     loadRegions = () => {
@@ -560,6 +589,125 @@ class ClippedDrawer extends React.Component {
         }}));
     }
 
+    handleAddCreditCardToOrganization = (cardNumber, cardInfo) => {
+        var url = BASE_API_URL + "/creditCard/addToOrganization?organizationName=" + this.props.organizationName
+            + "&creditCardNumber=" + cardNumber;
+        var self = this;
+        fetch(url)
+            .then(function (response) {
+                if (response.status >= 400) {
+                    throw new Error("Bad response from server");
+                }
+                return response.json();
+            })
+            .then(function(json) {
+                if (json.hasOwnProperty("error")) {
+                    throw new Error(json.error);
+                }
+                if (json.affectedRows !== 1) {
+                    throw new Error("Could not add credit card to organization.");
+                }
+                self.loadCreditCards();
+            });
+    }
+
+    handleCloseForCreateCreditCard = (result) => {
+        this.setState(state => ({
+            creationDialog: null,
+        }));
+        if (!result) return;
+        var url = BASE_API_URL + "/creditCard/create?cardNumber=" + result.CardNumber
+            + "&cvc=" + result.CVC
+            + "&expiryDate=" + result.ExpiryDate
+            + "&cardType=" + result.CardType ;
+        var self = this;
+        fetch(url)
+            .then(function (response) {
+                if (response.status >= 400) {
+                    throw new Error("Bad response from server");
+                }
+                return response.json();
+            })
+            .then(function(json) {
+                if (json.hasOwnProperty("error")) {
+                    throw new Error(json.error);
+                }
+                if (json.affectedRows !== 1) {
+                    throw new Error("Could not add credit card.");
+                }
+                self.handleAddCreditCardToOrganization(result.CardNumber);
+            });
+    }
+
+    handleCreateCreditCard = () => {
+        this.setState(state => ({creationDialog: {
+                titleText: "Add a new CreditCard",
+                fields: [{name: "CardNumber"}, {name: "CVC"}, {name: "ExpiryDate"}, {name: "CardType"}],
+                onClose: this.handleCloseForCreateCreditCard.bind(undefined),
+            }}));
+    }
+
+    handleDeleteCreditCard = (creditCardNumber) => {
+        if (this.state.confirmationDialog === null) {
+            this.setState(state => ({
+                confirmationDialog: {
+                    titleText: "Are you sure you want to delete this credit card?",
+                    contentText: "This action cannot be reversed.",
+                    yesText: "Yes",
+                    noText: "No",
+                    onClose: this.handleCloseForDeleteCreditCard.bind(undefined, creditCardNumber)
+                }
+            }));
+        }
+        return;
+    }
+
+    handleCloseForDeleteCreditCard = (creditCardNumber, result) => {
+        this.setState(state => ({
+            confirmationDialog: null,
+        }));
+        if (!result) return;
+        var url = BASE_API_URL + "/creditCard/removeFromOrganization?organizationName=" + this.props.organizationName
+            + "&creditCardNumber=" + creditCardNumber;
+        var self = this;
+        fetch(url)
+            .then(function (response) {
+                if (response.status >= 400) {
+                    throw new Error("Bad response from server");
+                }
+                return response.json();
+            })
+            .then(function (json) {
+                if (json.affectedRows !== 1) {
+                    throw new Error("Nothing to delete on server");
+                }
+                var deleteUrl = BASE_API_URL + "/creditCard/delete?cardNumber=" + creditCardNumber;
+                fetch(deleteUrl)
+                    .then(function (response) {
+                        if (response.status >= 400) {
+                            throw new Error("Bad response from server");
+                        }
+                        return response.json();
+                    })
+                    .then(function (json) {
+                        if (json.affectedRows !== 1) {
+                            throw new Error("Cannot delete credit card");
+                        }
+                    });
+                    self.loadCreditCards();
+            });
+    }
+
+    // purchase a service, adds a subscription to table...
+    // User should be able to pick a credit card and generates a transaction number, payment.
+    handlePurchaseService = (service) => {
+        // this.setState(state => ({creationDialog: {
+        //         titleText: "Purchasing Service " + service.name,
+        //         fields: [{name: "CreditCard", options: this.state.organizationCreditCards, keyfn: r => r.cardNumber, displayfn: r => r.cardNumber}],
+        //         // onClose: this.handleCloseForCreateCreditCard.bind(undefined),
+        //     }}));
+    }
+
     render() {
         const {classes} = this.props;
 
@@ -698,7 +846,7 @@ class ClippedDrawer extends React.Component {
                                         View
                                     </Button>
                                     :
-                                    <Button size="small" color="primary">
+                                    <Button size="small" color="primary" onClick={this.handlePurchaseService(service)}>
                                         Purchase
                                     </Button>}
                                 </CardActions>
@@ -832,6 +980,31 @@ class ClippedDrawer extends React.Component {
                                 </Paper>
                             </Grid>
                         </Grid>}
+                    {this.state.activePageId === "credit-cards" && <div>
+                        <Grid container spacing={24}>
+                            <Typography variant="headline" gutterBottom>Credit Cards</Typography>
+                            <Button onClick={this.handleCreateCreditCard}><Typography variant="headline" gutterBottom>+</Typography></Button>
+                            <Grid item xs={12}>
+                                <Paper className={classes.paper}>
+                                    <List subheader={<ListSubheader component="div">Credit Cards</ListSubheader>}>
+                                        {this.state.organizationCreditCards.map(function (card, idx){
+                                            return (
+                                                <ListItem key={card.cardNumber}>
+                                                    <ListItemIcon>
+                                                        <CreditCardIcon/>
+                                                    </ListItemIcon>
+                                                    <ListItemSecondaryAction>
+                                                        <Button onClick={this.handleDeleteCreditCard.bind(this, card.cardNumber)}>Delete</Button>
+                                                    </ListItemSecondaryAction>
+                                                    <ListItemText inset primary={card.cardNumber}/>
+                                                    <ListItemText inset secondary={card.expiryDate}/>
+                                                </ListItem>
+                                            )}.bind(this))}
+                                    </List>
+                                </Paper>
+                            </Grid>
+                        </Grid>
+                    </div>}
                     {this.state.activePageId === "access-groups" &&
                     <div>
                         <Typography variant="headline" gutterBottom>Access groups</Typography>

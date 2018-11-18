@@ -150,3 +150,30 @@ func RemoveCreditCardFromOrganization(db *sql.DB, params url.Values) (data []byt
 	data, err = json.Marshal(response)
 	return
 }
+
+// ListAllCreditCards that belongs to an organization
+func ListAllCreditCards(db *sql.DB, params url.Values) (data []byte, err error) {
+	var (
+		response         = SQLResponse{}
+		tx               *sql.Tx
+		organizationName string
+	)
+
+	if tx, err = db.Begin(); err != nil {
+		return
+	}
+	if organizationName, err = common.GetRequiredParam(params, "organizationName"); err != nil {
+		return
+	}
+	if response.Data, response.AffectedRows, err = common.QueryJSON(tx,
+		"SELECT * FROM OrganizationCreditCardPairs, CreditCard WHERE organizationName = ? AND creditCardNumber = cardNumber;",
+		organizationName); err != nil {
+		tx.Rollback()
+		return
+	}
+	if err = tx.Commit(); err != nil {
+		return
+	}
+	data, err = json.Marshal(response)
+	return
+}

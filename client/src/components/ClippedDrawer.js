@@ -241,13 +241,15 @@ class ClippedDrawer extends React.Component {
             })
             .then(function (json) {
                 if (json.affectedRows > 0) {
+                    for (var member in self.state.activeSubscriptionsMap) delete self.state.activeSubscriptionsMap[member];
                     var organizationActiveSubscriptions =  JSON.parse(json.data);
-                    self.setState({
-                        organizationActiveSubscriptions: organizationActiveSubscriptions
-                    });
                     for (var activeSubscription of organizationActiveSubscriptions) {
                         self.state.activeSubscriptionsMap[activeSubscription.serviceName] = activeSubscription;
                     }
+                    self.setState({
+                        organizationActiveSubscriptions: organizationActiveSubscriptions,
+                        activeSubscriptionsMap: self.state.activeSubscriptionsMap
+                    });
                 }
             });
     }
@@ -373,7 +375,6 @@ class ClippedDrawer extends React.Component {
                 for (var service of services) {
                     self.state.servicesMap[service.name] = service;
                 }
-                console.log(services);
             });
     }
 
@@ -963,7 +964,7 @@ class ClippedDrawer extends React.Component {
                 if (json.affectedRows !== 1) {
                     throw new Error("Could not purchase service.");
                 }
-                self.loadServices();
+                self.loadActiveServices();
             });
     }
 

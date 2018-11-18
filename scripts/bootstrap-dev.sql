@@ -24,8 +24,5 @@ INSERT INTO `AccessGroup` (`name`, `organizationName`) VALUES ('Testers', 'Macro
 INSERT INTO `UserAccessGroupPairs` (`accessGroupName`, `accessGroupOrganizationName`, `userEmailAddress`) VALUES ('Admins', 'Macrohard', 'a');
 INSERT INTO `UserAccessGroupPairs` (`accessGroupName`, `accessGroupOrganizationName`, `userEmailAddress`) VALUES ('Testers', 'Macrohard', 'a');
 INSERT INTO `UserAccessGroupPairs` (`accessGroupName`, `accessGroupOrganizationName`, `userEmailAddress`) VALUES ('Admins', 'Macrohard', 'test5@email.com');
--- INSERT INTO `UserAccessGroupPairs` (`accessGroupName`, `accessGroupOrganizationName`, `userEmailAddress`) VALUES ('Admins', 'Macrohard', 'test5@email.com');
-INSERT INTO `ServiceSubscriptionTransaction` (`type`, `serviceName`, `organizationName`, `description`, `activeuntil`, `transactionNumber`, `amountPaid`, `processedTimestamp`) VALUES (1,'EC2','Macrohard','paul trolling','2020-01-01 00:00:01',1,999,NOW());
-INSERT INTO `ServiceSubscriptionTransaction` (`type`, `serviceName`, `organizationName`, `description`, `activeuntil`, `transactionNumber`, `amountPaid`, `processedTimestamp`) VALUES (1,'S3','Macrohard','paul trolling','2017-01-01 00:00:01',1,999,'2016-07-01 00:00:01');
 INSERT INTO `CreditCard` (`cardNumber`, `cvc`, `expiryDate`, `cardType`) VALUE ('5555111122224444', '321', NOW(), 505);
 INSERT INTO `OrganizationCreditCardPairs` (`organizationName`, `creditCardNumber`) VALUES ('MacroHard', '5555111122224444');

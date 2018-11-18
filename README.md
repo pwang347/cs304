@@ -3,7 +3,9 @@
 ### Prerequisites
 
 -mysql
+
 -golang >= 1.7
+
 -npm
 
 To install node dependencies:

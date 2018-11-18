@@ -595,7 +595,7 @@ class ClippedDrawer extends React.Component {
                 return response.json()
             })
             .then((json) => {
-                var eventLogs = JSON.parse(json.data)
+                var eventLogs = json.data.length > 0 ? JSON.parse(json.data) : []
                 this.setState({
                     activePageId: 'event-logs',
                     virtualMachineLogs: {
@@ -609,8 +609,25 @@ class ClippedDrawer extends React.Component {
             })
     }
 
-    handleVirtualMachineLogsClose = () => {
-        this.setState({ virtualMachineLogs: null })
+    handleVirtualMachineAccess = (virtualMachineIpAddress) => {
+        var url = encodeURI(BASE_API_URL + "/virtualMachineAccessGroupPermissions/byVirtualMachine?vmIp=" + virtualMachineIpAddress)
+        fetch(url)
+            .then((response) => {
+                if (response.status >= 400) {
+                    throw new Error("Bad response from server")
+                }
+                return response.json()
+            })
+            .then((json) => {
+                var permissions = json.data.length > 0 ? JSON.parse(json.data) : []
+                this.setState({
+                    activePageId: 'vm-access',
+                    virtualMachineAccessGroupPermissions: {
+                        ipAddress: virtualMachineIpAddress,
+                        permissions: permissions
+                    }
+                })
+            })
     }
 
     handleCloseForDeleteServiceInstance = (serviceInstanceName, result) => {
@@ -1534,6 +1551,9 @@ class ClippedDrawer extends React.Component {
                                     <Button size="small" color="primary" onClick={this.handleVirtualMachineDetails.bind(this, virtualMachine.ipAddress)}>
                                         Details
                                     </Button>
+                                    <Button size="small" color="primary" onClick={this.handleVirtualMachineAccess.bind(this, virtualMachine.ipAddress)}>
+                                        Access
+                                    </Button>
                                     <Button size="small" color="primary" onClick={this.handleVirtualMachineLogs.bind(this, virtualMachine.ipAddress)}>
                                         Logs
                                     </Button>
@@ -1621,6 +1641,35 @@ class ClippedDrawer extends React.Component {
                             </Grid>
                         </Grid>
                     </div>}
+                    {this.state.activePageId === "vm-access" && <div>
+                        <Grid container spacing={24}>
+                            <Typography variant="headline" gutterBottom>Access Group Permissions for {this.state.virtualMachineAccessGroupPermissions.ipAddress}</Typography>
+                            <Grid item xs={12}>
+                                <Paper className={classes.paper}>
+                                    <Table classname={classes.table}>
+                                        <TableHead>
+                                            <TableRow>
+                                                <TableCell>Group Name</TableCell>
+                                                <TableCell>Access Level</TableCell>
+                                                <TableCell>Actions</TableCell>
+                                            </TableRow>
+                                        </TableHead>
+                                        <TableBody>
+                                            {this.state.virtualMachineAccessGroupPermissions.permissions.map((permission) => {
+                                                return (
+                                                    <TableRow key={permission.VirtualMachineIpAddress+'-'+permission.accessGroupName}>
+                                                        <TableCell>{permission.accessGroupName}</TableCell>
+                                                        <TableCell>{permission.accessLevel}</TableCell>
+                                                        <TableCell>Delete</TableCell>
+                                                    </TableRow>
+                                                )
+                                            })}
+                                        </TableBody>
+                                    </Table>
+                                </Paper>
+                            </Grid>
+                        </Grid>
+                    </div>}
                     {this.state.activePageId === "virtual-machines" && <div>
                         {this.state.organizationVirtualMachines.map(function (virtualMachine, idx) {
                             return (<Card className={classes.card} key={virtualMachine.ipAddress}>
@@ -1644,6 +1693,9 @@ class ClippedDrawer extends React.Component {
                                 <CardActions>
                                     <Button size="small" color="primary" onClick={this.handleVirtualMachineDetails.bind(this, virtualMachine.ipAddress)}>
                                         Details
+                                    </Button>
+                                    <Button size="small" color="primary" onClick={this.handleVirtualMachineAccess.bind(this, virtualMachine.ipAddress)}>
+                                        Access
                                     </Button>
                                     <Button size="small" color="primary" onClick={this.handleVirtualMachineLogs.bind(this, virtualMachine.ipAddress)}>
                                         Logs

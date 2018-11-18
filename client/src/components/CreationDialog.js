@@ -37,11 +37,11 @@ class CreationDialog extends React.Component {
   handleSelectField = (field) => {
     this.setState(state => ({selectedField: field,
     collectionPickerDialog: {
-      title: "Select " + this.state.selectedField.name,
+      title: "Select " + field.name,
       onClose: this.handleSelectFieldClose.bind(this),
-      staticdata: this.state.selectedField.options,
-      displayfn: this.state.selectedField.displayfn,
-      keyfn: this.state.selectedField.keyfn,
+      staticdata: field.options,
+      displayfn: field.displayfn,
+      keyfn: field.keyfn,
     }}));
   }
 

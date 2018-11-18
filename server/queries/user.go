@@ -166,7 +166,7 @@ func SelectUser(db *sql.DB, params url.Values) (data []byte, err error) {
 	if emailAddress, err = common.GetRequiredParam(params, "emailAddress"); err != nil {
 		return
 	}
-	if response.Data, response.AffectedRows, err = common.QueryJSON(tx, "SELECT * FROM User"+
+	if response.Data, response.AffectedRows, err = common.QueryJSON(tx, "SELECT * FROM User "+
 		"WHERE emailAddress=?;", emailAddress); err != nil {
 		tx.Rollback()
 		return

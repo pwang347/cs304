@@ -7,7 +7,9 @@ MYSQL_HOST=${MYSQL_HOST:-localhost}
 if [ -z $MYSQL_PASSWORD ]; then
     mysql -u $MYSQL_USER -h $MYSQL_HOST < bootstrap-db.sql
     go run seed.go -user $MYSQL_USER -mysqlHost $MYSQL_HOST
+    mysql -u $MYSQL_USER -h $MYSQL_HOST < bootstrap-dev.sql
 else
     mysql -u $MYSQL_USER -p $MYSQL_PASSWORD -h $MYSQL_HOST < bootstrap-db.sql
     go run seed.go -user $MYSQL_USER -password $MYSQL_PASSWORD -mysqlHost $MYSQL_HOST
+    mysql -u $MYSQL_USER -p $MYSQL_PASSWORD -h $MYSQL_HOST < bootstrap-dev.sql
 fi

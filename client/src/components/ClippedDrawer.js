@@ -123,6 +123,7 @@ class ClippedDrawer extends React.Component {
         this.loadTransactions();
         this.loadAccessGroups();
         this.loadAccessGroupUsers();
+        this.loadCreditCards();
     }
 
     handleClick = (id, data) => {
@@ -901,11 +902,97 @@ class ClippedDrawer extends React.Component {
     // purchase a service, adds a subscription to table...
     // User should be able to pick a credit card and generates a transaction number, payment.
     handlePurchaseService = (service) => {
-        // this.setState(state => ({creationDialog: {
-        //         titleText: "Purchasing Service " + service.name,
-        //         fields: [{name: "CreditCard", options: this.state.organizationCreditCards, keyfn: r => r.cardNumber, displayfn: r => r.cardNumber}],
-        //         // onClose: this.handleCloseForCreateCreditCard.bind(undefined),
-        //     }}));
+        this.setState(state => ({creationDialog: {
+                titleText: "Purchasing Service " + service.name,
+                fields: [
+                    {name: "Credit Card", options: this.state.organizationCreditCards, keyfn: r => r.cardNumber, displayfn: r => r.cardNumber},
+                    {name: "Subscription Length", options: ["1 month", "6 months", "1 year"], keyfn: r => r, displayfn: r => r}
+                    ],
+                onClose: this.handleCloseForPurchaseService.bind(undefined, service),
+            }}));
+    }
+
+    handleCloseForPurchaseService = (service, result) => {
+        this.setState(state => ({
+            creationDialog: null,
+        }));
+        if (!result) return;
+        this.handleCreateForPurchaseService(service, result);
+    }
+
+    handleCreateForPurchaseService = (service, result) => {
+        if (this.state.confirmationDialog === null) {
+            this.setState(state => ({confirmationDialog: {
+                    titleText: "Confirmation to purchasing " + service.name,
+                    contentText: "Your total will be $" + this.parsePriceFromSubscriptionLength(result["Subscription Length"]) +
+                        ", charged to credit card: " + result["Credit Card"],
+                    yesText: "Yes",
+                    noText: "No",
+                    onClose: this.handleConfirmedPurchase.bind(undefined, service, result)
+                }}));
+            return;
+        }
+    }
+
+    handleConfirmedPurchase = (service, data, result) => {
+        this.setState(state => ({
+            confirmationDialog: null,
+        }));
+        if (!result) return;
+        var today = new Date();
+        // TODO: what is service type anyway
+        var url = BASE_API_URL + "/serviceSubscriptionTransaction/create?organizationName=" + this.props.organizationName
+            + "&serviceType=" + "0"
+            + "&amountPaid=" + this.parsePriceFromSubscriptionLength(data["Subscription Length"])
+            + "&processedTimestamp=" + this.convertJavaScriptDateToMySQL(today)
+            + "&serviceName=" + service.name
+            + "&description=" + service.description
+            + "&activeUntil=" + this.parseActiveUntilFromSubscriptionLength(data["Subscription Length"]);
+        var self = this;
+        fetch(url)
+            .then(function (response) {
+                if (response.status >= 400) {
+                    throw new Error("Bad response from server");
+                }
+                return response.json();
+            })
+            .then(function (json) {
+                if (json.hasOwnProperty("error")) {
+                    throw new Error(json.error);
+                }
+                if (json.affectedRows !== 1) {
+                    throw new Error("Could not purchase service.");
+                }
+                self.loadServices();
+            });
+    }
+
+    parseActiveUntilFromSubscriptionLength = (subscriptionLength) => {
+        var today = new Date();
+        // not using UTC.... cuz i'm too lazy
+        if (subscriptionLength === "1 month") {
+            today.setMonth(today.getMonth() + 1);
+        }
+        if (subscriptionLength === "6 months") {
+            today.setMonth(today.getMonth() + 6);
+        }
+        if (subscriptionLength === "1 year") {
+            today.setFullYear(today.getFullYear() + 1);
+        }
+        return this.convertJavaScriptDateToMySQL(today);
+    }
+
+    parsePriceFromSubscriptionLength = (subscriptionLength) => {
+        if (subscriptionLength === "1 month") {
+            return 100;
+        }
+        if (subscriptionLength === "6 months") {
+            return 500;
+        }
+        if (subscriptionLength === "1 year") {
+            return 900;
+        }
+        return 0;
     }
 
     handleCloseForCreateVirtualMachine = (serviceName, result) => {
@@ -955,6 +1042,10 @@ class ClippedDrawer extends React.Component {
             ],
             onClose: this.handleCloseForCreateVirtualMachine.bind(undefined, this.state.activeServiceName),
         }}));
+    }
+
+    convertJavaScriptDateToMySQL = (date) => {
+        return date.toISOString().slice(0,19).replace('T', ' ');
     }
 
     render() {
@@ -1095,7 +1186,7 @@ class ClippedDrawer extends React.Component {
                                         View
                                     </Button>
                                     :
-                                    <Button size="small" color="primary" onClick={this.handlePurchaseService(service)}>
+                                    <Button size="small" color="primary" onClick={this.handlePurchaseService.bind(this,service)}>
                                         Purchase
                                     </Button>}
                                 </CardActions>

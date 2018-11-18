@@ -20,23 +20,13 @@ func CreateServiceSubscriptionTransaction(db *sql.DB, params url.Values) (data [
 		serviceName           string
 		description           string
 		organizationName      string
-		activeUntilStr        string
-		activeUntil           int
+		activeUntil           string
 		amountPaidStr         string
 		amountPaid            int
-		processedTimeStampStr string
-		processedTimeStamp    int
-		transactionNumStr     string
-		transactionNum        int
+		processedTimeStamp    string
 	)
 
 	if tx, err = db.Begin(); err != nil {
-		return
-	}
-	if transactionNumStr, err = common.GetRequiredParam(params, "transactionNumber"); err != nil {
-		return
-	}
-	if transactionNum, err = strconv.Atoi(transactionNumStr); err != nil {
 		return
 	}
 	if amountPaidStr, err = common.GetRequiredParam(params, "amountPaid"); err != nil {
@@ -45,10 +35,7 @@ func CreateServiceSubscriptionTransaction(db *sql.DB, params url.Values) (data [
 	if amountPaid, err = strconv.Atoi(amountPaidStr); err != nil {
 		return
 	}
-	if processedTimeStampStr, err = common.GetRequiredParam(params, "processedTimeStamp"); err != nil {
-		return
-	}
-	if processedTimeStamp, err = strconv.Atoi(processedTimeStampStr); err != nil {
+	if processedTimeStamp, err = common.GetRequiredParam(params, "processedTimestamp"); err != nil {
 		return
 	}
 	if serviceTypeStr, err = common.GetRequiredParam(params, "serviceType"); err != nil {
@@ -66,14 +53,11 @@ func CreateServiceSubscriptionTransaction(db *sql.DB, params url.Values) (data [
 	if organizationName, err = common.GetRequiredParam(params, "organizationName"); err != nil {
 		return
 	}
-	if activeUntilStr, err = common.GetRequiredParam(params, "activeUntil"); err != nil {
+	if activeUntil, err = common.GetRequiredParam(params, "activeUntil"); err != nil {
 		return
 	}
-	if activeUntil, err = strconv.Atoi(activeUntilStr); err != nil {
-		return
-	}
-	if result, err = tx.Exec("INSERT INTO ServiceSubscriptionTransaction (transactionNumber, amountPaid, processedTimestamp, type,serviceName,description, organizationName, activeUntil) VALUES(?,?,?,?,?,?,?,?);",
-		transactionNum, amountPaid, processedTimeStamp, serviceType, serviceName, description, organizationName, activeUntil); err != nil {
+	if result, err = tx.Exec("INSERT INTO ServiceSubscriptionTransaction (amountPaid, processedTimestamp,type,serviceName,description, organizationName, activeUntil) VALUES(?,?,?,?,?,?,?);",
+		amountPaid, processedTimeStamp, serviceType, serviceName, description, organizationName, activeUntil); err != nil {
 		tx.Rollback()
 		return
 	}

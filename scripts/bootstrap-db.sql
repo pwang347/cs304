@@ -210,7 +210,7 @@ CREATE TABLE ServiceSubscriptionTransaction
     organizationName VARCHAR(255),
     description VARCHAR(255),
     activeUntil DATETIME,
-    transactionNumber INT,
+    transactionNumber INT AUTO_INCREMENT,
     amountPaid INT,
     processedTimestamp DATETIME,
     PRIMARY KEY (transactionNumber, organizationName),

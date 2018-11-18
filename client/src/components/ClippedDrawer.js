@@ -37,6 +37,7 @@ import TableBody from '@material-ui/core/TableBody';
 import TableCell from '@material-ui/core/TableCell';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
+import TableFooter from '@material-ui/core/TableFooter';
 import ConfirmationDialog from './ConfirmationDialog';
 import CollectionPickerDialog from './CollectionPickerDialog';
 import CreationDialog from './CreationDialog';
@@ -103,6 +104,7 @@ class ClippedDrawer extends React.Component {
         virtualMachinesMap: {},
         organizationActiveSubscriptions: [],
         organizationTransactions: [],
+        organizationCurrentMonthTransactions: [],
         organizationAccessGroups: [],
         organizationCreditCards: [],
         activeSubscriptionsMap: {},
@@ -133,6 +135,7 @@ class ClippedDrawer extends React.Component {
         this.loadOrganizationUsers();
         this.loadCreditCards();
         this.loadCurrentUser();
+        this.loadCurrentMonthTransactions();
     }
 
     handleClick = (id, data) => {
@@ -152,6 +155,7 @@ class ClippedDrawer extends React.Component {
             if (id === "billing") {
                 this.loadActiveServices();
                 this.loadTransactions();
+                this.loadCurrentMonthTransactions();
             }
             if (id === "access-groups"){
                 this.loadAccessGroups();
@@ -338,6 +342,35 @@ class ClippedDrawer extends React.Component {
                 if (json.affectedRows > 0) {
                     self.setState({
                         organizationTransactions: JSON.parse(json.data)
+                    });
+                }
+            });
+    }
+
+    loadCurrentMonthTransactions = () => {
+        var date = new Date();
+        var month = date.getMonth() + 1;
+        var year = date.getFullYear();
+        var url = BASE_API_URL + "/serviceSubscriptionTransaction/listCurrentMonthTransactions" +
+            "?organizationName=" + this.props.organizationName
+            + "&currentMonth=" + month
+            + "&currentYear=" + year;
+        var self = this;
+        fetch(url)
+            .then(function (response) {
+                if (response.status >= 400) {
+                    throw new Error("Bad response from server");
+                }
+                return response.json();
+            })
+            .then(function (json) {
+                if (json.affectedRows > 0) {
+                    self.setState({
+                        organizationCurrentMonthTransactions: JSON.parse(json.data)
+                    });
+                } else {
+                    self.setState({
+                        organizationCurrentMonthTransactions: JSON.parse(json.data)
                     });
                 }
             });
@@ -1372,6 +1405,14 @@ class ClippedDrawer extends React.Component {
         return date.toISOString().slice(0,19).replace('T', ' ');
     }
 
+    calculateTotalForCurrentMonthTransaction = () => {
+        var total = 0;
+        for (var i = 0; i < this.state.organizationCurrentMonthTransactions.length; i++) {
+            total += this.state.organizationCurrentMonthTransactions[i].amountPaid;
+        }
+        return total;
+    }
+
     render() {
         const {classes} = this.props;
 
@@ -1766,6 +1807,38 @@ class ClippedDrawer extends React.Component {
                                                 )
                                             })}
                                         </TableBody>
+                                    </Table>
+                                </Paper>
+                            </Grid>
+                            <Grid item xs={12} sm={12}>
+                                <Typography variant="headline" gutterBottom>Spending Report For Month {new Date().getMonth() + 1}</Typography>
+                                <Paper className={classes.paper}>
+                                    <Table className={classes.table}>
+                                        <TableHead>
+                                            <TableRow>
+                                                <TableCell>Transaction Number</TableCell>
+                                                <TableCell numeric>Amount Paid</TableCell>
+                                                <TableCell>Processed Date</TableCell>
+                                            </TableRow>
+                                        </TableHead>
+                                        <TableBody>
+                                            {this.state.organizationCurrentMonthTransactions.map(function (tran, idx) {
+                                                return (
+                                                    <TableRow key={tran.transactionNumber}>
+                                                        <TableCell component="th" scope="row">
+                                                            {tran.transactionNumber}
+                                                        </TableCell>
+                                                        <TableCell numeric>{tran.amountPaid}</TableCell>
+                                                        <TableCell>{tran.processedTimestamp}</TableCell>
+                                                    </TableRow>
+                                                )
+                                            })}
+                                        </TableBody>
+                                        <TableFooter>
+                                            <TableRow>
+                                                Total: {this.calculateTotalForCurrentMonthTransaction()}
+                                            </TableRow>
+                                        </TableFooter>
                                     </Table>
                                 </Paper>
                             </Grid>

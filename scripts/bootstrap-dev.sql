@@ -41,3 +41,5 @@ INSERT INTO `OrganizationCreditCardPairs` (`organizationName`, `creditCardNumber
 
 INSERT INTO `EventLog` (`logNumber`, `timestamp`, `data`, `eventType`, `VirtualMachineIpAddress`) VALUES (1, '2018-10-02 15:04:05', 'something happened', 'info', '0.0.0.0');
 INSERT INTO `EventLog` (`logNumber`, `timestamp`, `data`, `eventType`, `VirtualMachineIpAddress`) VALUES (2, '2018-11-10 15:04:05', 'something went wrong', 'error', '0.0.0.0');
+
+INSERT INTO `ServiceSubscriptionTransaction` (`type`, `serviceName`, `organizationName`, `description`, `activeUntil`, `amountPaid`, `processedTimestamp`) values(1, 'EC2', 'MacroHard', 'hello', '2008-01-20 00:00:00', 100, '2007-12-20 00:00:00');

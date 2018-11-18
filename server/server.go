@@ -87,10 +87,11 @@ var (
 		"listForServiceInstance": queries.QueryServiceInstanceKeys,
 	}
 	serviceSubscriptionQueries = map[string]query{
-		"create":                  queries.CreateServiceSubscriptionTransaction,
-		"delete":                  queries.DeleteServiceSubscriptionTransactionByTransaction,
-		"listActiveSubscriptions": queries.ListAllActiveServiceSubscriptionTransactions,
-		"listTransactions":        queries.ListAllCompletedTransactions,
+		"create":                  		queries.CreateServiceSubscriptionTransaction,
+		"delete":                  		queries.DeleteServiceSubscriptionTransactionByTransaction,
+		"listActiveSubscriptions": 		queries.ListAllActiveServiceSubscriptionTransactions,
+		"listTransactions":        		queries.ListAllCompletedTransactions,
+		"listCurrentMonthTransactions": queries.GetTransactionsForCurrentMonth,
 	}
 	virtualMachineQueries = map[string]query{
 		"create":                  queries.CreateVirtualMachine,

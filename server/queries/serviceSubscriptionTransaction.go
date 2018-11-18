@@ -161,3 +161,39 @@ func ListAllCompletedTransactions(db *sql.DB, params url.Values) (data []byte, e
 	data, err = json.Marshal(response)
 	return
 }
+
+// get all transactions for given month and year in an organization
+func GetTransactionsForCurrentMonth(db *sql.DB, params url.Values) (data []byte, err error) {
+	var (
+		response         = SQLResponse{}
+		tx               *sql.Tx
+		organizationName string
+		currentMonth	 string
+		currentYear	     string
+	)
+
+	if tx, err = db.Begin(); err != nil {
+		return
+	}
+	if organizationName, err = common.GetRequiredParam(params, "organizationName"); err != nil {
+		return
+	}
+	if currentMonth, err = common.GetRequiredParam(params, "currentMonth"); err != nil {
+		return
+	}
+	if currentYear, err = common.GetRequiredParam(params, "currentYear"); err != nil {
+		return
+	}
+	if response.Data, response.AffectedRows, err = common.QueryJSON(tx,
+		"SELECT * FROM ServiceSubscriptionTransaction WHERE organizationName = ? " +
+		"AND MONTH(processedTimestamp) = ? AND YEAR(processedTimestamp) = ? ;",
+		organizationName, currentMonth, currentYear); err != nil {
+		tx.Rollback()
+		return
+	}
+	if err = tx.Commit(); err != nil {
+		return
+	}
+	data, err = json.Marshal(response)
+	return
+}

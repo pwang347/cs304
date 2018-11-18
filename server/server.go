@@ -19,7 +19,7 @@ import (
 
 const (
 	// DefaultServerPort represents the default port number for server
-	DefaultServerPort = 8080
+	DefaultServerPort = 4000
 
 	// ErrorNotFound represents the error for URL not found
 	ErrorNotFound = "not-found"
@@ -106,6 +106,9 @@ var (
 		"update":  queries.UpdateUser,
 		"login":  queries.UserLogin,
 	}
+	eventLogQueries = map[string]query{
+		"byVirtualMachine": queries.QueryEventLogsForVirtualMachine,
+	}
 )
 
 type (
@@ -189,6 +192,7 @@ func main() {
 	r.HandleFunc("/api/serviceSubscriptionTransaction/{query}", mapJSONEndpoints(serviceSubscriptionQueries))
 	r.HandleFunc("/api/virtualMachine/{query}", mapJSONEndpoints(virtualMachineQueries))
 	r.HandleFunc("/api/user/{query}", mapJSONEndpoints(userQueries))
+	r.HandleFunc("/api/eventLogs/{query}", mapJSONEndpoints(eventLogQueries))
 	http.Handle("/", r)
 
 	fmt.Println(fmt.Sprintf("Starting webserver at http://0.0.0.0:%d...", *port))

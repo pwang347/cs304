@@ -117,6 +117,7 @@ class ClippedDrawer extends React.Component {
         addingToGroup: null,
         userIsAdmin: false,
         currentUser: null,
+        virtualMachineLogs: null
     };
 
     componentDidMount() {
@@ -582,6 +583,34 @@ class ClippedDrawer extends React.Component {
                 ],
                 onClose: this.handleVirtualMachineDetailsClose.bind(this)
             }}));
+    }
+
+    handleVirtualMachineLogs = (virtualMachineIpAddress) => {
+        var url = encodeURI(BASE_API_URL + "/eventLogs/byVirtualMachine?vmIp=" + virtualMachineIpAddress)
+        fetch(url)
+            .then((response) => {
+                if (response.status >= 400) {
+                    throw new Error("Bad response from server")
+                }
+                return response.json()
+            })
+            .then((json) => {
+                var eventLogs = JSON.parse(json.data)
+                this.setState({
+                    activePageId: 'event-logs',
+                    virtualMachineLogs: {
+                        ipAddress: virtualMachineIpAddress,
+                        logs: eventLogs,
+                        before: null,
+                        after: null,
+                        type: null
+                    }
+                })
+            })
+    }
+
+    handleVirtualMachineLogsClose = () => {
+        this.setState({ virtualMachineLogs: null })
     }
 
     handleCloseForDeleteServiceInstance = (serviceInstanceName, result) => {
@@ -1503,7 +1532,10 @@ class ClippedDrawer extends React.Component {
                                 </CardActionArea>
                                 <CardActions>
                                     <Button size="small" color="primary" onClick={this.handleVirtualMachineDetails.bind(this, virtualMachine.ipAddress)}>
-                                        View details
+                                        Details
+                                    </Button>
+                                    <Button size="small" color="primary" onClick={this.handleVirtualMachineLogs.bind(this, virtualMachine.ipAddress)}>
+                                        Logs
                                     </Button>
                                     <Button size="small" color="primary" onClick={this.handleDeleteVirtualMachine.bind(this, virtualMachine.ipAddress)}>
                                         Terminate
@@ -1558,6 +1590,37 @@ class ClippedDrawer extends React.Component {
                                 View Subscriptions/Transactions
                             </Button>
                         </div>)}
+                    {this.state.activePageId === "event-logs" && <div>
+                        <Grid container spacing={24}>
+                            <Typography variant="headline" gutterBottom>Event Logs for {this.state.virtualMachineLogs.ipAddress}</Typography>
+                            <Grid item xs={12}>
+                                <Paper className={classes.paper}>
+                                    <Table classname={classes.table}>
+                                        <TableHead>
+                                            <TableRow>
+                                                <TableCell>Log Number</TableCell>
+                                                <TableCell>Timestamp</TableCell>
+                                                <TableCell>Type</TableCell>
+                                                <TableCell>Data</TableCell>
+                                            </TableRow>
+                                        </TableHead>
+                                        <TableBody>
+                                            {this.state.virtualMachineLogs.logs.map((log) => {
+                                                return (
+                                                    <TableRow key={log.VirtualMachineIpAddress+'-'+log.logNumber}>
+                                                        <TableCell>{log.logNumber}</TableCell>
+                                                        <TableCell>{log.timestamp}</TableCell>
+                                                        <TableCell>{log.eventType}</TableCell>
+                                                        <TableCell>{log.data}</TableCell>
+                                                    </TableRow>
+                                                )
+                                            })}
+                                        </TableBody>
+                                    </Table>
+                                </Paper>
+                            </Grid>
+                        </Grid>
+                    </div>}
                     {this.state.activePageId === "virtual-machines" && <div>
                         {this.state.organizationVirtualMachines.map(function (virtualMachine, idx) {
                             return (<Card className={classes.card} key={virtualMachine.ipAddress}>
@@ -1580,7 +1643,10 @@ class ClippedDrawer extends React.Component {
                                 </CardActionArea>
                                 <CardActions>
                                     <Button size="small" color="primary" onClick={this.handleVirtualMachineDetails.bind(this, virtualMachine.ipAddress)}>
-                                        View details
+                                        Details
+                                    </Button>
+                                    <Button size="small" color="primary" onClick={this.handleVirtualMachineLogs.bind(this, virtualMachine.ipAddress)}>
+                                        Logs
                                     </Button>
                                     <Button size="small" color="primary" onClick={this.handleDeleteVirtualMachine.bind(this, virtualMachine.ipAddress)}>
                                         Terminate

@@ -24,7 +24,7 @@ func QueryEventLogsForVirtualMachine(db *sql.DB, params url.Values) (data []byte
 	}
 
 	if response.Data, response.AffectedRows, err = common.QueryJSON(tx,
-		"SELECT * FROM EventLog WHERE VirtualMachineIpAddress = ?", vmIp); err != nil {
+		"SELECT * FROM EventLog WHERE VirtualMachineIpAddress = ?;", vmIp); err != nil {
 		tx.Rollback()
 		return
 	}

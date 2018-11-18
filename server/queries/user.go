@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/url"
 	"strconv"
+	"strings"
 
 	"github.com/pwang347/cs304/server/common"
 )
@@ -52,6 +53,65 @@ func CreateUser(db *sql.DB, params url.Values) (data []byte, err error) {
 		emailAddress, firstName, lastName, passwordHash, isAdmin, twoFactorPhoneNumber); err != nil {
 		tx.Rollback()
 		return
+	}
+	if err = tx.Commit(); err != nil {
+		return
+	}
+	if response.AffectedRows, err = result.RowsAffected(); err != nil {
+		return
+	}
+	data, err = json.Marshal(response)
+	return
+}
+
+// UpdateUser updates a user
+func UpdateUser(db *sql.DB, params url.Values) (data []byte, err error) {
+	var (
+		result               sql.Result
+		response             = SQLResponse{}
+		tx                   *sql.Tx
+		emailAddress         string
+		firstName            string
+		lastName             string
+		passwordHash         string
+		isAdminStr           string
+		twoFactorPhoneNumber string
+		updateStatements		 []string
+	)
+
+	if tx, err = db.Begin(); err != nil {
+		return nil, err
+	}
+
+	// email address is the only truly required param
+	if emailAddress, err = common.GetRequiredParam(params, "emailAddress"); err != nil {
+		return
+	}
+
+	// At least one param must be specified for the update to be valid
+	if firstName, err = common.GetRequiredParam(params, "firstName"); err != nil {
+		updateStatements = append(updateStatements, "firstName = " + firstName)
+	}
+	if lastName, err = common.GetRequiredParam(params, "lastName"); err != nil {
+		updateStatements = append(updateStatements, "lastName = " + lastName)
+	}
+	if passwordHash, err = common.GetRequiredParam(params, "passwordHash"); err != nil {
+		updateStatements = append(updateStatements, "passwordHash = " + passwordHash)
+	}
+	if isAdminStr, err = common.GetRequiredParam(params, "isAdmin"); err != nil {
+		updateStatements = append(updateStatements, "isAdmin = " + isAdminStr)
+	}
+	if twoFactorPhoneNumber, err = common.GetRequiredParam(params, "twoFactorPhoneNumber"); err != nil {
+		updateStatements = append(updateStatements, "twoFactorPhoneNumber = " + twoFactorPhoneNumber)
+	}
+
+	if len(updateStatements) < 1 {
+		return
+	}
+
+	if result, err = tx.Exec("UPDATE User SET " + strings.Join(updateStatements, ", ") + " WHERE emailAddress = ?;",
+		emailAddress); err != nil {
+		tx.Rollback()
 	}
 	if err = tx.Commit(); err != nil {
 		return

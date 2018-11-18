@@ -8,7 +8,6 @@ CREATE TABLE User
     firstName VARCHAR(20),
     lastName VARCHAR(20),
     passwordHash VARCHAR(255),
-    isAdmin BOOLEAN,
     twoFactorPhoneNumber VARCHAR(20),
     PRIMARY KEY (emailAddress),
     UNIQUE (twoFactorPhoneNumber)
@@ -30,6 +29,7 @@ CREATE TABLE UserOrganizationPairs
 (
     organizationName VARCHAR(255),
     userEmailAddress VARCHAR(255),
+    isAdmin BOOLEAN,
     PRIMARY KEY (organizationName, userEmailAddress),
     FOREIGN KEY (organizationName) REFERENCES Organization(name)
         ON DELETE CASCADE
@@ -241,3 +241,8 @@ CREATE TABLE OrganizationCreditCardPairs
         ON DELETE CASCADE
         ON UPDATE CASCADE
 );
+
+CREATE VIEW AdminUser AS
+SELECT *
+FROM UserOrganizationPairs UOP, User U
+WHERE UOP.userEmailAddress = U.emailAddress AND UOP.isAdmin = 1;

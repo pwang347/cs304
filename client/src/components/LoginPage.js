@@ -49,7 +49,7 @@ class LoginPage extends React.Component {
                 throw new Error(json.error);
             }
             if (json.affectedRows > 0) {
-                self.props.setUser(JSON.parse(json.data)[0].emailAddress);
+                self.props.setUser(JSON.parse(json.data)[0]);
                 self.props.login();
             }
             else {
@@ -67,11 +67,11 @@ class LoginPage extends React.Component {
             return;
         }
         var emailAddress = this.state.emailAddress;
+        var password = this.state.password;
         var url = BASE_API_URL + "/user/create?emailAddress=" + emailAddress
-        + "&passwordHash=" + this.state.password
+        + "&passwordHash=" + password
         + "&firstName=" + this.state.firstName
         + "&lastName=" + this.state.lastName
-        + "&isAdmin=false"
         + "&twoFactorPhoneNumber=" + this.state.twoFactorPhoneNumber;
         var self = this;
         fetch(url)
@@ -83,8 +83,9 @@ class LoginPage extends React.Component {
                 throw new Error(json.error);
             }
             if (json.affectedRows > 0) {
-                self.props.setUser(emailAddress);
-                self.props.login();
+                self.state.emailAddress = emailAddress;
+                self.state.password = password;
+                self.handleLogin();
             }
             else {
                 throw new Error("User with the same email or phone number already exists.");

@@ -147,7 +147,6 @@ func main() {
 		attributeGenerator{name: "firstName", generator: generateFirstName},
 		attributeGenerator{name: "lastName", generator: generateLastName},
 		attributeGenerator{name: "passwordHash", generator: generatePasswordHash},
-		attributeGenerator{name: "isAdmin", generator: generateBoolean},
 		attributeGenerator{name: "twoFactorPhoneNumber", generator: generatePhoneNumber}); err != nil {
 		panic(err)
 	}

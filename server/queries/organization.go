@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"net/url"
+	"strconv"
 
 	"github.com/pwang347/cs304/server/common"
 )
@@ -174,8 +175,8 @@ func QueryUserOrganizations(db *sql.DB, params url.Values) (data []byte, err err
 	return
 }
 
-// QueryOrganizationUsers queries all users an organization contains
-func QueryOrganizationUsers(db *sql.DB, params url.Values) (data []byte, err error) {
+// QueryOrganizationUsersNotInGroup queries all users an organization contains not in an access group
+func QueryOrganizationUsersNotInGroup(db *sql.DB, params url.Values) (data []byte, err error) {
 	var (
 		response         = SQLResponse{}
 		tx               *sql.Tx
@@ -200,6 +201,102 @@ func QueryOrganizationUsers(db *sql.DB, params url.Values) (data []byte, err err
 		return
 	}
 	if err = tx.Commit(); err != nil {
+		return
+	}
+	data, err = json.Marshal(response)
+	return
+}
+
+// QueryOrganizationUsers queries all users an organization contains
+func QueryOrganizationUsers(db *sql.DB, params url.Values) (data []byte, err error) {
+	var (
+		response         = SQLResponse{}
+		tx               *sql.Tx
+		organizationName string
+	)
+
+	if tx, err = db.Begin(); err != nil {
+		return nil, err
+	}
+	if organizationName, err = common.GetRequiredParam(params, "organizationName"); err != nil {
+		return
+	}
+	if response.Data, response.AffectedRows, err = common.QueryJSON(tx, "SELECT * FROM UserOrganizationPairs UOP, User U "+
+		"WHERE UOP.userEmailAddress = U.emailAddress AND UOP.organizationName = ? ",
+		organizationName); err != nil {
+		tx.Rollback()
+		return
+	}
+	if err = tx.Commit(); err != nil {
+		return
+	}
+	data, err = json.Marshal(response)
+	return
+}
+
+// QueryUserNotInOrganization queries all users not in an organization
+func QueryUserNotInOrganization(db *sql.DB, params url.Values) (data []byte, err error) {
+	var (
+		response         = SQLResponse{}
+		tx               *sql.Tx
+		organizationName string
+	)
+
+	if tx, err = db.Begin(); err != nil {
+		return nil, err
+	}
+	if organizationName, err = common.GetRequiredParam(params, "organizationName"); err != nil {
+		return
+	}
+	if response.Data, response.AffectedRows, err = common.QueryJSON(tx, "SELECT * FROM User U "+
+		"WHERE NOT EXISTS (select * from UserOrganizationPairs UOP where UOP.userEmailAddress = U.emailAddress AND UOP.organizationName = ?);",
+		organizationName); err != nil {
+		tx.Rollback()
+		return
+	}
+	if err = tx.Commit(); err != nil {
+		return
+	}
+	data, err = json.Marshal(response)
+	return
+}
+
+// UpdateUserOrganizationPairs updates a user organization pair
+func UpdateUserOrganizationPairs(db *sql.DB, params url.Values) (data []byte, err error) {
+	var (
+		result           sql.Result
+		response         = SQLResponse{}
+		tx               *sql.Tx
+		organizationName string
+		userEmailAddress string
+		isAdminStr       string
+		isAdmin          bool
+	)
+
+	if tx, err = db.Begin(); err != nil {
+		return nil, err
+	}
+	if organizationName, err = common.GetRequiredParam(params, "organizationName"); err != nil {
+		return
+	}
+	if userEmailAddress, err = common.GetRequiredParam(params, "userEmailAddress"); err != nil {
+		return
+	}
+	if isAdminStr, err = common.GetRequiredParam(params, "isAdmin"); err != nil {
+		return
+	}
+	if isAdmin, err = strconv.ParseBool(isAdminStr); err != nil {
+		return
+	}
+	if result, err = tx.Exec("UPDATE UserOrganizationPairs SET isAdmin = ? WHERE organizationName=? AND userEmailAddress=?;",
+		isAdmin, organizationName, userEmailAddress); err != nil {
+		tx.Rollback()
+		return
+	}
+	if err = tx.Commit(); err != nil {
+		return
+	}
+	if response.AffectedRows, err = result.RowsAffected(); err != nil {
 		return
 	}
 	data, err = json.Marshal(response)

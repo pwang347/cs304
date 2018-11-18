@@ -43,7 +43,13 @@ var (
 		"delete":                 queries.DeleteCreditCard,
 		"addToOrganization":      queries.AddCreditCardToOrganization,
 		"removeFromOrganization": queries.RemoveCreditCardFromOrganization,
-		"listCreditCards": 		  queries.ListAllCreditCards,
+		"listCreditCards":        queries.ListAllCreditCards,
+	}
+	metricsQueries = map[string]query{
+		"organizationsServed":  queries.QueryNumberOfOrganizationsForService,
+		"countInstances":       queries.QueryNumberOfInstancesPerRegion,
+		"countVirtualMachines": queries.QueryNumberOfVirtualMachinesPerRegion,
+		"purchasesWeekly":      queries.QueryWeeklyPurchasesForService,
 	}
 	organizationQueries = map[string]query{
 		"create":                            queries.CreateOrganization,
@@ -51,7 +57,10 @@ var (
 		"addUser":                           queries.AddUserToOrganization,
 		"removeUser":                        queries.RemoveUserFromOrganization,
 		"listUser":                          queries.QueryUserOrganizations,
-		"listUsersInOrganizationNotInGroup": queries.QueryOrganizationUsers,
+		"listUsersInOrganization":           queries.QueryOrganizationUsers,
+		"listUserNotInOrganization":         queries.QueryUserNotInOrganization,
+		"listUsersInOrganizationNotInGroup": queries.QueryOrganizationUsersNotInGroup,
+		"updateAdmin":                       queries.UpdateUserOrganizationPairs,
 	}
 	regionQueries = map[string]query{
 		"list": queries.QueryAllRegions,
@@ -89,10 +98,11 @@ var (
 		"listServiceOrganization": queries.QueryVirtualMachineServiceOrganization,
 	}
 	userQueries = map[string]query{
-		"create": queries.CreateUser,
-		"delete": queries.DeleteUser,
-		"select": queries.SelectUser,
-		"login":  queries.UserLogin,
+		"create":  queries.CreateUser,
+		"delete":  queries.DeleteUser,
+		"isAdmin": queries.UserIsAdminForOrganization,
+		"select":  queries.SelectUser,
+		"login":   queries.UserLogin,
 	}
 )
 
@@ -167,6 +177,7 @@ func main() {
 	r.HandleFunc("/api/accessGroup/{query}", mapJSONEndpoints(accessGroupQueries))
 	r.HandleFunc("/api/baseImage/{query}", mapJSONEndpoints(baseImageQueries))
 	r.HandleFunc("/api/creditCard/{query}", mapJSONEndpoints(creditCardQueries))
+	r.HandleFunc("/api/metrics/{query}", mapJSONEndpoints(metricsQueries))
 	r.HandleFunc("/api/organization/{query}", mapJSONEndpoints(organizationQueries))
 	r.HandleFunc("/api/region/{query}", mapJSONEndpoints(regionQueries))
 	r.HandleFunc("/api/service/{query}", mapJSONEndpoints(serviceQueries))

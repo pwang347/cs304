@@ -38,11 +38,12 @@ import TableCell from '@material-ui/core/TableCell';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import ConfirmationDialog from './ConfirmationDialog';
-import CollectionPicker from './CollectionPicker';
+import CollectionPickerDialog from './CollectionPickerDialog';
 import CreationDialog from './CreationDialog';
 import PlayArrow from '@material-ui/icons/PlayArrow';
 import ListSubheader from "@material-ui/core/ListSubheader/ListSubheader";
 import DetailViewDialog from './DetailViewDialog';
+import DeviceHub from '@material-ui/icons/DeviceHub';
 
 const drawerWidth = 300;
 
@@ -106,15 +107,19 @@ class ClippedDrawer extends React.Component {
         organizationCreditCards: [],
         activeSubscriptionsMap: {},
         accessGroupsMap: {},
+        organizationUsers: [],
         displayedServiceInstance: null,
         serviceInstancesMap: {},
         confirmationDialog: null,
         creationDialog: null,
         detailViewDialog: null,
+        collectionPickerDialog: null,
         addingToGroup: null,
+        userIsAdmin: true,
     };
 
     componentDidMount() {
+        this.loadAdminFlag();
         this.loadRegions();
         this.loadBaseImages();
         this.loadServices();
@@ -123,6 +128,7 @@ class ClippedDrawer extends React.Component {
         this.loadTransactions();
         this.loadAccessGroups();
         this.loadAccessGroupUsers();
+        this.loadOrganizationUsers();
         this.loadCreditCards();
     }
 
@@ -166,6 +172,45 @@ class ClippedDrawer extends React.Component {
             }
         }
     };
+
+    loadAdminFlag = () => {
+        var url = BASE_API_URL + "/user/isAdmin?organizationName=" + this.props.organizationName
+        + "&emailAddress=" + this.props.user.emailAddress;
+        var self = this;
+        fetch(url)
+            .then(function (response) {
+                if (response.status >= 400) {
+                    throw new Error("Bad response from server");
+                }
+                return response.json();
+            })
+            .then(function (json) {
+                if (json.affectedRows > 0) {
+                    self.setState({
+                        userIsAdmin: true,
+                    });
+                }
+        });
+    }
+
+    loadOrganizationUsers = () => {
+        var url = BASE_API_URL + "/organization/listUsersInOrganization?organizationName=" + this.props.organizationName;
+        var self = this;
+        fetch(url)
+            .then(function (response) {
+                if (response.status >= 400) {
+                    throw new Error("Bad response from server");
+                }
+                return response.json();
+            })
+            .then(function (json) {
+                if (json.affectedRows > 0) {
+                    self.setState({
+                        organizationUsers: JSON.parse(json.data),
+                    });
+                }
+            });
+    }
 
     loadCreditCards = () => {
         var url = BASE_API_URL + "/creditCard/listCreditCards?organizationName=" + this.props.organizationName;
@@ -629,10 +674,18 @@ class ClippedDrawer extends React.Component {
     }
 
     handleAddUserToAccessGroup = (accessGroupName) => {
-        this.setState({addingToGroup: accessGroupName});
+        this.setState({collectionPickerDialog: {
+            title: "Select a user",
+            onClose: this.handleAddUserToAccessGroupClose.bind(this),
+            dataEndpoint: "/organization/listUsersInOrganizationNotInGroup?organizationName=" + this.props.organizationName
+                                    + "&accessGroupName=" + this.state.addingToGroup,
+            displayfn: (user) => user.emailAddress,
+            keyfn: (user) => user.emailAddress,
+        },
+        addingToGroup: accessGroupName});
     }
     
-    handleAddingToGroupClose = (value) => {
+    handleAddUserToAccessGroupClose = (value) => {
         var groupName = this.state.addingToGroup;
         if (value) {
             var url = BASE_API_URL + "/accessGroup/addUser?accessGroupName=" + groupName
@@ -659,6 +712,129 @@ class ClippedDrawer extends React.Component {
             });
         }
         this.setState({addingToGroup: null});
+    }
+
+    handleAddUserToOrganization = () => {
+        this.setState({collectionPickerDialog: {
+            title: "Select a user",
+            onClose: this.handleAddUserToOrganizationClose.bind(this),
+            dataEndpoint: "/organization/listUserNotInOrganization?organizationName=" + this.props.organizationName,
+            displayfn: (user) => user.emailAddress,
+            keyfn: (user) => user.emailAddress,
+        }});
+    }
+    
+    handleAddUserToOrganizationClose = (value) => {
+        this.setState({collectionPickerDialog: null});
+        if (value) {
+            var url = BASE_API_URL + "/organization/addUser?organizationName=" + this.props.organizationName
+            + "&userEmailAddress=" + value;
+            var self = this;
+            fetch(url)
+            .then(function(response) {
+                return response.json();
+            })
+            .then(function(json) {
+                if (json.hasOwnProperty("error")) {
+                    throw new Error(json.error);
+                }
+                if (json.affectedRows !== 1) {
+                    throw new Error("Could not add user.");
+                }
+                self.loadOrganizationUsers();
+            });
+        }
+    }
+
+    handleDeleteUserFromOrganization = (userEmailAddress) => {
+        var url = BASE_API_URL + "/organization/removeUser?userEmailAddress=" + userEmailAddress
+        + "&organizationName=" + this.props.organizationName;
+        var self = this;
+        fetch(url)
+            .then(function (response) {
+                if (response.status >= 400) {
+                    throw new Error("Bad response from server");
+                }
+                return response.json();
+            })
+            .then(function (json) {
+                if (json.affectedRows !== 1) {
+                    throw new Error("Nothing to delete on server");
+                }
+                self.loadOrganizationUsers();
+        });
+    }
+
+    handleSetUserAdmin = (userEmailAddress, value) => {
+        var url = BASE_API_URL + "/organization/updateAdmin?userEmailAddress=" + userEmailAddress
+        + "&organizationName=" + this.props.organizationName
+        + "&isAdmin=" + value;
+        var self = this;
+        fetch(url)
+            .then(function (response) {
+                if (response.status >= 400) {
+                    throw new Error("Bad response from server");
+                }
+                return response.json();
+            })
+            .then(function (json) {
+                if (json.affectedRows !== 1) {
+                    throw new Error("Nothing to update on server");
+                }
+                self.loadOrganizationUsers();
+        });
+    }
+
+    handleShowServiceDetailsClose = () => {
+        this.setState(state => ({detailViewDialog: null}));
+    }
+
+    handleShowServiceDetails = (serviceName) => {
+        var service = this.state.servicesMap[serviceName];
+        this.setState(state => ({detailViewDialog: {
+                title: "Interesting metrics for " + serviceName,
+                tables: [
+                    {
+                        title: "Number of organizations served",
+                        columns: [
+                            {
+                                name: "Organization count",
+                                key: "organizationCount",
+                            },
+                        ],
+                        emptyValue: [{organizationCount: 0}],
+                        dataEndpoint: "/metrics/organizationsServed?serviceName=" + serviceName,
+                    },
+                    {
+                        title: "Total number of instances per region",
+                        columns: [
+                            {
+                                name: "Count",
+                                key: "count",
+                            },
+                            {
+                                name: "Region",
+                                key: "regionName",
+                            },
+                        ],
+                        emptyValue: this.state.regions.map(region => ({
+                            count: 0,
+                            regionName: region.name})),
+                        dataEndpoint: (service.isVirtualMachineService === "1" ? "/metrics/countVirtualMachines?serviceName=" : "/metrics/countInstances?serviceName=") + serviceName,
+                    },
+                    {
+                        title: "Number of purchases this week",
+                        columns: [
+                            {
+                                name: "Purchases",
+                                key: "purchases",
+                            },
+                        ],
+                        dataEndpoint: "/metrics/purchasesWeekly?serviceName=" + serviceName,
+                    },
+                ],
+                onClose: this.handleShowServiceDetailsClose.bind(this)
+            }}));
     }
 
     handleCloseForDeleteAccessGroup = (accessGroupName, result) => {
@@ -1121,26 +1297,33 @@ class ClippedDrawer extends React.Component {
                         </ListItem>
                         <Collapse in={this.state.organizationOpen} timeout="auto" unmountOnExit>
                             <List component="div" disablePadding>
-                                <ListItem button onClick={this.handleClick("billing")} className={classes.nested}
+                                {this.state.userIsAdmin && <ListItem button onClick={this.handleClick("billing")} className={classes.nested}
                                           selected={this.state.activePageId === "billing"}>
                                     <ListItemIcon>
                                         <AttachMoney/>
                                     </ListItemIcon>
                                     <ListItemText inset primary="Billing"/>
-                                </ListItem>
-                                <ListItem button onClick={this.handleClick("credit-cards")} className={classes.nested}
+                                </ListItem>}
+                                {this.state.userIsAdmin && <ListItem button onClick={this.handleClick("credit-cards")} className={classes.nested}
                                           selected={this.state.activePageId === "credit-cards"}>
                                     <ListItemIcon>
                                         <CreditCardIcon/>
                                     </ListItemIcon>
                                     <ListItemText inset primary="Credit Cards"/>
-                                </ListItem>
+                                </ListItem>}
                                 <ListItem button onClick={this.handleClick("access-groups")} className={classes.nested}
                                           selected={this.state.activePageId === "access-groups"}>
                                     <ListItemIcon>
-                                        <PeopleIcon/>
+                                        <DeviceHub/>
                                     </ListItemIcon>
                                     <ListItemText inset primary="Access Groups"/>
+                                </ListItem>
+                                <ListItem button onClick={this.handleClick("manage-users")} className={classes.nested}
+                                          selected={this.state.activePageId === "manage-users"}>
+                                    <ListItemIcon>
+                                        <PeopleIcon/>
+                                    </ListItemIcon>
+                                    <ListItemText inset primary="Manage users"/>
                                 </ListItem>
                             </List>
                         </Collapse>
@@ -1164,8 +1347,9 @@ class ClippedDrawer extends React.Component {
                 <main className={classes.content}>
                     <div className={classes.toolbar}/>
                     {this.state.activePageId === "store" && <div>
+                    <Typography variant="headline" gutterBottom>Hello, {this.props.user.firstName}!</Typography>
                         {this.state.services.map(function (service, idx) {
-                            return (<Card className={classes.card} key={service.name}>
+                            return (<Card className={classes.card} key={service.name} onClick={this.handleShowServiceDetails.bind(this, service.name)}>
                                 <CardActionArea>
                                     <CardMedia
                                         className={classes.media}
@@ -1187,7 +1371,7 @@ class ClippedDrawer extends React.Component {
                                         View
                                     </Button>
                                     :
-                                    <Button size="small" color="primary" onClick={this.handlePurchaseService.bind(this,service)}>
+                                    this.state.userIsAdmin && <Button size="small" color="primary" onClick={this.handlePurchaseService.bind(this,service)}>
                                         Purchase
                                     </Button>}
                                 </CardActions>
@@ -1202,8 +1386,10 @@ class ClippedDrawer extends React.Component {
                                 <CardActionArea>
                                     <CardMedia
                                         className={classes.media}
-                                        image={defaultImageUrl}
-                                        title="Contemplative Reptile"
+                                        image={(!this.state.servicesMap || !this.state.servicesMap.hasOwnProperty(virtualMachine.virtualMachineServiceName)
+                                            || !this.state.servicesMap[virtualMachine.virtualMachineServiceName].imageUrl) ? defaultImageUrl
+                                            : this.state.servicesMap[virtualMachine.virtualMachineServiceName].imageUrl}
+                                        title={virtualMachine.ipAddress}
                                     />
                                     <CardContent>
                                         <Typography gutterBottom variant="h5" component="h2">
@@ -1238,7 +1424,7 @@ class ClippedDrawer extends React.Component {
                                         className={classes.media}
                                         image={(!this.state.servicesMap || !this.state.servicesMap.hasOwnProperty(serviceInstance.serviceName)
                                             || !this.state.servicesMap[serviceInstance.serviceName].imageUrl) ? defaultImageUrl : this.state.servicesMap[serviceInstance.serviceName].imageUrl}
-                                        title="Contemplative Reptile"
+                                        title={serviceInstance.name}
                                     />
                                     <CardContent>
                                         <Typography gutterBottom variant="h5" component="h2">
@@ -1271,8 +1457,10 @@ class ClippedDrawer extends React.Component {
                                 <CardActionArea>
                                     <CardMedia
                                         className={classes.media}
-                                        image={defaultImageUrl}
-                                        title="Contemplative Reptile"
+                                        image={(!this.state.servicesMap || !this.state.servicesMap.hasOwnProperty(virtualMachine.virtualMachineServiceName)
+                                            || !this.state.servicesMap[virtualMachine.virtualMachineServiceName].imageUrl) ? defaultImageUrl
+                                            : this.state.servicesMap[virtualMachine.virtualMachineServiceName].imageUrl}
+                                        title={virtualMachine.ipAddress}
                                     />
                                     <CardContent>
                                         <Typography gutterBottom variant="h5" component="h2">
@@ -1390,7 +1578,7 @@ class ClippedDrawer extends React.Component {
                             <div key={accessGroup.name}>
                             <div>
                             <Typography variant="headline">{accessGroup.name}</Typography>
-                            <Button onClick={this.handleDeleteAccessGroup.bind(this, accessGroup.name)}>Delete</Button>
+                            {this.state.userIsAdmin && <Button onClick={this.handleDeleteAccessGroup.bind(this, accessGroup.name)}>Delete</Button>}
                             </div>
                             <Paper className={classes.accessGroup}> 
                                 <List>
@@ -1400,21 +1588,63 @@ class ClippedDrawer extends React.Component {
                                     <ListItemIcon>
                                         <PersonIcon/>
                                     </ListItemIcon>
-                                    <ListItemSecondaryAction>
+                                    {this.state.userIsAdmin && <ListItemSecondaryAction>
                                         <Button onClick={this.handleRemoveUserFromAccessGroup.bind(this, accessGroup.name, userEmailAddress)}>x</Button>
-                                    </ListItemSecondaryAction>
+                                    </ListItemSecondaryAction>}
                                     <ListItemText inset primary={userEmailAddress}/>
                                 </ListItem>
                                 )}.bind(this))}
-                                <ListItem>
+                                {this.state.userIsAdmin && <ListItem>
                                     <Button onClick={this.handleAddUserToAccessGroup.bind(this, accessGroup.name)}>Add user</Button>
-                                </ListItem>
+                                </ListItem>}
                                 </List>
                             </Paper>
                             </div>)}.bind(this))}
-                            <Button variant="contained" color="primary" onClick={this.handleCreateAccessGroup}>
+                            {this.state.userIsAdmin && <Button variant="contained" color="primary" onClick={this.handleCreateAccessGroup}>
                                 Create new access group
-                            </Button>
+                            </Button>}
+                    </div>}
+                    {this.state.activePageId === "manage-users" && <div>
+                        <Grid container spacing={24}>
+                            <Typography variant="headline" gutterBottom>Manage Users in {this.props.organizationName}</Typography>
+                            <Button onClick={this.handleAddUserToOrganization}><Typography variant="headline" gutterBottom>+</Typography></Button>
+                            <Grid item xs={12}>
+                            <Typography variant="headline" gutterBottom>Users</Typography>
+                                <Paper className={classes.paper}>
+                                    <Table className={classes.table}>
+                                        <TableHead>
+                                            <TableRow>
+                                                <TableCell>First name</TableCell>
+                                                <TableCell>Last name</TableCell>
+                                                <TableCell>Email address</TableCell>
+                                                <TableCell>Phone number</TableCell>
+                                                <TableCell>Admin</TableCell>
+                                                <TableCell></TableCell>
+                                                <TableCell></TableCell>
+                                            </TableRow>
+                                        </TableHead>
+                                        <TableBody>
+                                            {this.state.organizationUsers.map(function (user, idx){
+                                                return (
+                                                    <TableRow key={user.emailAddress}>
+                                                        <TableCell>{user.firstName}</TableCell>
+                                                        <TableCell>{user.lastName}</TableCell>
+                                                        <TableCell>{user.emailAddress}</TableCell>
+                                                        <TableCell>{user.twoFactorPhoneNumber}</TableCell>
+                                                        <TableCell>{user.emailAddress !== this.props.user.emailAddress
+                                                        && (user.isAdmin?
+                                                        <Button onClick={this.handleSetUserAdmin.bind(this, user.emailAddress, false)}>Remove admin</Button>
+                                                        :
+                                                        <Button onClick={this.handleSetUserAdmin.bind(this, user.emailAddress, true)}>Make admin</Button>)}</TableCell>
+                                                        <TableCell>{user.emailAddress !== this.props.user.emailAddress &&
+                                                        <Button onClick={this.handleDeleteUserFromOrganization.bind(this, user.emailAddress)}>Delete</Button>}</TableCell>
+                                                    </TableRow>
+                                                )}.bind(this))}
+                                        </TableBody>
+                                    </Table>
+                                </Paper>
+                            </Grid>
+                        </Grid>
                     </div>}
                     {this.state.activePageId === "my-profile" && <Typography paragraph>
                         <Button onClick={this.handleClickChangeOrganization}>
@@ -1429,14 +1659,8 @@ class ClippedDrawer extends React.Component {
                     }
                     {this.state.creationDialog !== null &&
                     <CreationDialog dialog={this.state.creationDialog}/>}
-                    <CollectionPicker  titleText="Select a user"
-                        open={this.state.addingToGroup !== null}
-                        onClose={this.handleAddingToGroupClose.bind(this)}
-                        dataEndpoint={"/organization/listUsersInOrganizationNotInGroup?organizationName=" + this.props.organizationName
-                                    + "&accessGroupName=" + this.state.addingToGroup}
-                        displayfn={(user) => user.emailAddress}
-                        keyfn={(user) => user.emailAddress}>
-                    </CollectionPicker>
+                    {this.state.collectionPickerDialog !== null &&
+                    <CollectionPickerDialog open={this.state.collectionPickerDialog !== null} dialog={this.state.collectionPickerDialog}/>}
                     </main>
             </div>
         );

@@ -34,6 +34,7 @@ class DetailViewDialog extends React.Component {
                 this.setState(state => ({data: this.state.data}));
                 continue;
             }
+            const title = table.title;
             fetch(BASE_API_URL + table.dataEndpoint)
             .then(function(response) {
                 if (response.status >= 400) {
@@ -42,7 +43,7 @@ class DetailViewDialog extends React.Component {
                 return response.json();
             })
             .then(function(json) {
-                self.state.data[table.title] = JSON.parse(json.data);
+                self.state.data[title] = JSON.parse(json.data);
                 self.setState(state => ({data: self.state.data}));
             });
         }
@@ -64,10 +65,8 @@ class DetailViewDialog extends React.Component {
           <DialogContent>
               <div>
                 {dialog.tables.map(function (table, idx) {
-                    console.log(JSON.stringify(this.state.data));
-                    console.log(JSON.stringify(table));
                 return (
-                    <List>
+                    <List key={idx}>
                         <ListItem>
                         <Typography>
                             {table.title}
@@ -85,7 +84,8 @@ class DetailViewDialog extends React.Component {
                             </TableRow>
                             </TableHead>
                             <TableBody>
-                            {(this.state.data[table.title] || []).map(function (row, rowidx) {
+                            {((this.state.data[table.title] != null && this.state.data[table.title].length > 0)?
+                               this.state.data[table.title] : (table.emptyValue? table.emptyValue : [])).map(function (row, rowidx) {
                                 return (
                                     <TableRow key={table.title + "row:" + rowidx}>
                                     {table.columns.map(function (column, colidx) {

@@ -32,17 +32,24 @@ class OrganizationPage extends React.Component {
             newOrganizationName: null,
             errorMessage: "",
             showCreate: false,
+            collectionPickerDialog: null,
         };
     }
 
     handleClickOpen = () => {
         this.setState({
+            collectionPickerDialog: {
+                title: "Select an organization",
+                onClose: this.handleClose.bind(this),
+                dataEndpoint: "/organization/listUser?userEmailAddress=" + this.props.userEmailAddress,
+                displayfn: (pair) => pair.organizationName,
+                keyfn: (pair) => pair.organizationName,
+            },
           open: true,
         });
       };
     
     handleClose = value => {
-        console.log(value);
         this.setState({open: false});
         if (value) {
             this.props.setOrganization(value);
@@ -91,14 +98,7 @@ class OrganizationPage extends React.Component {
             <List>
                 <ListItem>
                     <Button onClick={this.handleClickOpen}>Select an organization</Button>
-                    <CollectionPicker
-                        titleText="Select an organization"
-                        open={this.state.open}
-                        onClose={this.handleClose.bind(this)}
-                        dataEndpoint={"/organization/listUser?userEmailAddress=" + this.props.userEmailAddress}
-                        displayfn={(pair) => pair.organizationName}
-                        keyfn={(pair) => pair.organizationName}
-                    />
+                    {this.state.collectionPickerDialog && <CollectionPicker open={this.state.open} dialog={this.state.collectionPickerDialog}/>}
                     <Button variant="contained" color="primary" onClick={this.handleCreate}>
                         Create new organization
                     </Button>

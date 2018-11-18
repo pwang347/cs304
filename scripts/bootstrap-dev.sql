@@ -1,14 +1,14 @@
 USE cs304;
 
-INSERT INTO User (emailAddress, firstName, lastName, passwordHash, isAdmin, twoFactorPhoneNumber) VALUES ("a", "Bob", "Joe", "b", 1, "6041234567");
+INSERT INTO User (emailAddress, firstName, lastName, passwordHash, twoFactorPhoneNumber) VALUES ("a", "Bob", "Joe", "b", "6041234567");
 INSERT INTO `Organization` (`name`, `createdTimestamp`, `contactEmailAddress`) VALUES ('Macrohard', '2018-11-15 15:32:50', 'a');
 INSERT INTO `Organization` (`name`, `createdTimestamp`, `contactEmailAddress`) VALUES ('test', '2018-11-15 18:28:01', 'a');
 INSERT INTO `Organization` (`name`, `createdTimestamp`, `contactEmailAddress`) VALUES ('test2', '2018-11-15 18:34:37', 'a');
 INSERT INTO `Organization` (`name`, `createdTimestamp`, `contactEmailAddress`) VALUES ('asd', '2018-11-15 18:35:50', 'a');
 INSERT INTO `Organization` (`name`, `createdTimestamp`, `contactEmailAddress`) VALUES ('asdsad', '2018-11-15 18:37:26', 'a');
 INSERT INTO `Organization` (`name`, `createdTimestamp`, `contactEmailAddress`) VALUES ('asdasf', '2018-11-15 20:20:08', 'a');
-INSERT INTO `UserOrganizationPairs` (`organizationName`, `userEmailAddress`) VALUES ('asdasf', 'a');
-INSERT INTO `UserOrganizationPairs` (`organizationName`, `userEmailAddress`) VALUES ('Macrohard', 'a');
+INSERT INTO `UserOrganizationPairs` (`organizationName`, `userEmailAddress`, `isAdmin`) VALUES ('asdasf', 'a', true);
+INSERT INTO `UserOrganizationPairs` (`organizationName`, `userEmailAddress`, `isAdmin`) VALUES ('Macrohard', 'a', true);
 INSERT INTO `Service` (`name`, `description`, `isPreview`, `isEnabled`, `isVirtualMachineService`, `imageUrl`) VALUES ('EC2', 'This is some cool stuff', 0, 1, 1, "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b9/AWS_Simple_Icons_Compute_Amazon_EC2_Instances.svg/300px-AWS_Simple_Icons_Compute_Amazon_EC2_Instances.svg.png");
 INSERT INTO `Service` (`name`, `description`, `isPreview`, `isEnabled`, `isVirtualMachineService`, `imageUrl`) VALUES ('S3', 'ASdasdasd', 0, 1, 0, "https://sylvainleroy.com/wp-content/uploads/2018/02/s3.png");
 INSERT INTO `Service` (`name`, `description`, `isPreview`, `isEnabled`, `isVirtualMachineService`, `imageUrl`) VALUES ('Compute', 'asdasdasd', 1, 1, 0, "https://www.stratoscale.com/wp-content/uploads/AWS-Lambda.png");

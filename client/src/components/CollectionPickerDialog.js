@@ -14,7 +14,7 @@ import { BASE_API_URL } from "../config";
 
 const styles = {}
 
-class CollectionPicker extends React.Component {
+class CollectionPickerDialog extends React.Component {
 
     state = {
         data: [],
@@ -25,12 +25,12 @@ class CollectionPicker extends React.Component {
     }
 
     load = () => {
-      if (this.props.staticdata) {
-        this.setState(state => ({data: this.props.staticdata}));
+      if (this.props.dialog.staticdata) {
+        this.setState(state => ({data: this.props.dialog.staticdata}));
         return;
       }
       var self = this;
-      fetch(BASE_API_URL + this.props.dataEndpoint)
+      fetch(BASE_API_URL + this.props.dialog.dataEndpoint)
       .then(function(response) {
           if (response.status >= 400) {
           throw new Error("Bad response from server");
@@ -47,24 +47,24 @@ class CollectionPicker extends React.Component {
     }
 
     handleClose = () => {
-      this.props.onClose();
+      this.props.dialog.onClose();
     };
   
     handleListItemClick = value => {
-      this.props.onClose(value);
+      this.props.dialog.onClose(value);
     };
   
     render() {
-      const { classes, onClose, keyfn, titleText, displayfn, ...other } = this.props;
+      const { classes, dialog, ...other } = this.props;
       return (
         <Dialog onEnter={this.handleOpen} onClose={this.handleClose} aria-labelledby="simple-dialog-title" {...other}>
-          <DialogTitle>{titleText}</DialogTitle>
+          <DialogTitle>{dialog.title}</DialogTitle>
           <div>
             <List>
               {this.state.data.map(function (d, idx) {
                   return (
-                <ListItem button onClick={this.handleListItemClick.bind(this, keyfn(d))} key={keyfn(d)}>
-                  <ListItemText primary={displayfn(d)} />
+                <ListItem button onClick={this.handleListItemClick.bind(this, dialog.keyfn(d))} key={dialog.keyfn(d)}>
+                  <ListItemText primary={dialog.displayfn(d)} />
                 </ListItem>
               )}.bind(this))}
             </List>
@@ -74,14 +74,9 @@ class CollectionPicker extends React.Component {
     }
   }
   
-  CollectionPicker.propTypes = {
+  CollectionPickerDialog.propTypes = {
     classes: PropTypes.object.isRequired,
-    onClose: PropTypes.func,
-    keyfn: PropTypes.func,
-    displayfn: PropTypes.func,
-    dataEndpoint: PropTypes.string,
-    staticdata: PropTypes.array,
-    titleText: PropTypes.string,
+    dialog: PropTypes.object,
   };
   
-  export default withStyles(styles)(CollectionPicker);
+  export default withStyles(styles)(CollectionPickerDialog);

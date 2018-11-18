@@ -12,9 +12,9 @@ class App extends Component {
     super(props);
 
     this.state = {
-      isLoggedIn: true,
-      organizationName: "Macrohard",
-      userEmailAddress: "a",
+      isLoggedIn: false,
+      organizationName: null,
+      user: null,
     };
 
     this.login = this.login.bind(this);
@@ -29,12 +29,12 @@ class App extends Component {
   logout() {
     this.setState(state => ({
       isLoggedIn: false,
-      userEmailAddress: null,
+      user: null,
       organizationName: null}));
   }
 
-  setUser(userEmailAddress) {
-    this.setState(state => ({ userEmailAddress: userEmailAddress}));
+  setUser(user) {
+    this.setState(state => ({ user: user}));
   }
 
   setOrganization(organizationName) {
@@ -54,8 +54,12 @@ class App extends Component {
           </Toolbar>
         </AppBar>
         {this.state.isLoggedIn === false && <LoginPage login={this.login} setUser={this.setUser}/>}
-        {(this.state.isLoggedIn === true && this.state.organizationName === null) && <OrganizationPage setOrganization={this.setOrganization} userEmailAddress={this.state.userEmailAddress}/>}
-        {(this.state.isLoggedIn === true && this.state.organizationName !== null) && <ClippedDrawer setOrganization={this.setOrganization} logout={this.logout} organizationName={this.state.organizationName}/>}
+        {(this.state.isLoggedIn === true && this.state.organizationName === null) && <OrganizationPage setOrganization={this.setOrganization} userEmailAddress={this.state.user.emailAddress}/>}
+        {(this.state.isLoggedIn === true && this.state.organizationName !== null) &&
+        <ClippedDrawer setOrganization={this.setOrganization}
+                       logout={this.logout}
+                       organizationName={this.state.organizationName}
+                       user={this.state.user}/>}
       </div>
     )
   }

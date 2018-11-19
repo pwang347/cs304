@@ -74,6 +74,27 @@ CREATE TABLE Service
     PRIMARY KEY (name)
 );
 
+CREATE TABLE ServiceType
+(
+    type INT(11),
+    serviceTypeName VARCHAR(255),
+    PRIMARY KEY (type)
+);
+
+CREATE TABLE ServiceServiceTypePairs
+(
+    serviceType INT(11),
+    serviceName varchar(255),
+    price INT(11),
+    PRIMARY KEY (serviceType, serviceName),
+    FOREIGN KEY (serviceType) REFERENCES ServiceType(type)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
+    FOREIGN KEY (serviceName) REFERENCES Service(name)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE
+);
+
 CREATE TABLE Region
 (
     name VARCHAR(255),
@@ -214,7 +235,9 @@ CREATE TABLE ServiceSubscriptionTransaction
     amountPaid INT,
     processedTimestamp DATETIME,
     PRIMARY KEY (transactionNumber, organizationName),
-    UNIQUE (type, serviceName, organizationName),
+    FOREIGN KEY (type, serviceName) REFERENCES ServiceServiceTypePairs(serviceType, serviceName)
+        ON DELETE CASCADE
+        ON UPDATE CASCADE,
     FOREIGN KEY (organizationName) REFERENCES Organization(name)
         ON DELETE CASCADE
         ON UPDATE CASCADE

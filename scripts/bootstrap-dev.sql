@@ -42,4 +42,19 @@ INSERT INTO `OrganizationCreditCardPairs` (`organizationName`, `creditCardNumber
 INSERT INTO `EventLog` (`logNumber`, `timestamp`, `data`, `eventType`, `VirtualMachineIpAddress`) VALUES (1, '2018-10-02 15:04:05', 'something happened', 'info', '0.0.0.0');
 INSERT INTO `EventLog` (`logNumber`, `timestamp`, `data`, `eventType`, `VirtualMachineIpAddress`) VALUES (2, '2018-11-10 15:04:05', 'something went wrong', 'error', '0.0.0.0');
 
-INSERT INTO `ServiceSubscriptionTransaction` (`type`, `serviceName`, `organizationName`, `description`, `activeUntil`, `amountPaid`, `processedTimestamp`) values(1, 'EC2', 'MacroHard', 'hello', '2008-01-20 00:00:00', 100, '2007-12-20 00:00:00');
+INSERT INTO `ServiceType` (`type`, `serviceTypeName`) VALUES (1, 'One time');
+INSERT INTO `ServiceType` (`type`, `serviceTypeName`) VALUES (2, 'One month');
+INSERT INTO `ServiceType` (`type`, `serviceTypeName`) VALUES (3, 'Six month');
+INSERT INTO `ServiceType` (`type`, `serviceTypeName`) VALUES (4, 'One year');
+INSERT INTO `ServiceServiceTypePairs` (`serviceType`, `serviceName`, `price`) VALUES (1, 'EC2', 1000);
+INSERT INTO `ServiceServiceTypePairs` (`serviceType`, `serviceName`, `price`) VALUES (2, 'EC2', 100);
+INSERT INTO `ServiceServiceTypePairs` (`serviceType`, `serviceName`, `price`) VALUES (3, 'EC2', 400);
+INSERT INTO `ServiceServiceTypePairs` (`serviceType`, `serviceName`, `price`) VALUES (4, 'EC2', 700);
+INSERT INTO `ServiceServiceTypePairs` (`serviceType`, `serviceName`, `price`) VALUES (3, 'Compute', 2500);
+INSERT INTO `ServiceServiceTypePairs` (`serviceType`, `serviceName`, `price`) VALUES (4, 'Compute', 4500);
+INSERT INTO `ServiceServiceTypePairs` (`serviceType`, `serviceName`, `price`) VALUES (1, 'S3', 50000);
+INSERT INTO `ServiceServiceTypePairs` (`serviceType`, `serviceName`, `price`) VALUES (2, 'S3', 12000);
+INSERT INTO `ServiceServiceTypePairs` (`serviceType`, `serviceName`, `price`) VALUES (3, 'S3', 15000);
+INSERT INTO `ServiceServiceTypePairs` (`serviceType`, `serviceName`, `price`) VALUES (4, 'S3', 19999);
+
+INSERT INTO `ServiceSubscriptionTransaction` (`type`, `serviceName`, `organizationName`, `description`, `activeUntil`, `amountPaid`, `processedTimestamp`) VALUES (2, 'EC2', 'MacroHard', 'hello', '2008-01-20 00:00:00', 100, '2007-12-20 00:00:00');

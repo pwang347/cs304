@@ -23,7 +23,7 @@ import Camera from '@material-ui/icons/Camera';
 import Computer from '@material-ui/icons/Computer';
 import AttachMoney from '@material-ui/icons/AttachMoney';
 import CreditCardIcon from '@material-ui/icons/CreditCard';
-import {BASE_API_URL} from "../config";
+import {ENUM_MAPPINGS, BASE_API_URL} from "../config";
 import Card from '@material-ui/core/Card';
 import CardActionArea from '@material-ui/core/CardActionArea';
 import CardActions from '@material-ui/core/CardActions';
@@ -507,6 +507,171 @@ class ClippedDrawer extends React.Component {
             });
     }
 
+    handleCloseForCreateServiceInstanceConfiguration = (serviceInstanceName, refreshFn, result) => {
+        this.setState(state => ({
+            creationDialog: null,
+        }));
+        if (!result) return;
+        var serviceInstance = this.state.serviceInstancesMap[serviceInstanceName];
+        var url = BASE_API_URL + "/serviceInstanceConfiguration/create?configKey=" + result["Variable name"]
+        + "&data=" + result["Value"]
+        + "&serviceInstanceName=" + serviceInstance.name
+        + "&serviceInstanceServiceName=" + serviceInstance.serviceName
+        + "&serviceInstanceOrganizationName=" + this.props.organizationName;
+        var self = this;
+        fetch(url)
+            .then(function (response) {
+                if (response.status >= 400) {
+                    throw new Error("Bad response from server");
+                }
+                return response.json();
+            })
+            .then(function(json) {
+                if (json.hasOwnProperty("error")) {
+                    throw new Error(json.error);
+                }
+                if (json.affectedRows !== 1) {
+                    throw new Error("Could not add config.");
+                }
+                refreshFn();
+            });
+    }
+
+    handleCreateServiceInstanceConfiguration = (serviceInstanceName, refreshFn) => {
+        var serviceInstance = this.state.serviceInstancesMap[serviceInstanceName];
+        this.setState(state => ({creationDialog: {
+            titleText: "Add configuration",
+            fields: [{name: "Variable name"}, {name: "Value"}],
+            onClose: this.handleCloseForCreateServiceInstanceConfiguration.bind(this, serviceInstanceName, refreshFn),
+        }}));
+    }
+
+    handleDeleteServiceInstanceConfiguration = (serviceInstanceName, row, refreshFn) => {
+        var serviceInstance = this.state.serviceInstancesMap[serviceInstanceName];
+        var url = BASE_API_URL + "/serviceInstanceConfiguration/delete?configKey=" + row.configKey
+        + "&serviceInstanceName=" + serviceInstance.name
+        + "&serviceInstanceServiceName=" + serviceInstance.serviceName
+        + "&serviceInstanceOrganizationName=" + this.props.organizationName;
+        var self = this;
+        fetch(url)
+            .then(function (response) {
+                if (response.status >= 400) {
+                    throw new Error("Bad response from server");
+                }
+                return response.json();
+            })
+            .then(function(json) {
+                if (json.hasOwnProperty("error")) {
+                    throw new Error(json.error);
+                }
+                if (json.affectedRows !== 1) {
+                    throw new Error("Could not delete config.");
+                }
+                refreshFn();
+            });
+    }
+
+    handleCreateServiceInstanceKey = (serviceInstanceName, refreshFn) => {
+        var serviceInstance = this.state.serviceInstancesMap[serviceInstanceName];
+        var url = BASE_API_URL + "/serviceInstanceKey/create?"
+        + "&serviceInstanceName=" + serviceInstance.name
+        + "&serviceInstanceServiceName=" + serviceInstance.serviceName
+        + "&serviceInstanceOrganizationName=" + this.props.organizationName;
+        var self = this;
+        fetch(url)
+            .then(function (response) {
+                if (response.status >= 400) {
+                    throw new Error("Bad response from server");
+                }
+                return response.json();
+            })
+            .then(function(json) {
+                if (json.hasOwnProperty("error")) {
+                    throw new Error(json.error);
+                }
+                if (json.affectedRows !== 1) {
+                    throw new Error("Could not add API key.");
+                }
+                refreshFn();
+            });
+    }
+
+    handleDeleteServiceInstanceKey = (serviceInstanceName, row, refreshFn) => {
+        var serviceInstance = this.state.serviceInstancesMap[serviceInstanceName];
+        var url = BASE_API_URL + "/serviceInstanceKey/delete?keyValue=" + row.keyValue
+        + "&serviceInstanceName=" + serviceInstance.name
+        + "&serviceInstanceServiceName=" + serviceInstance.serviceName
+        + "&serviceInstanceOrganizationName=" + this.props.organizationName;
+        var self = this;
+        fetch(url)
+            .then(function (response) {
+                if (response.status >= 400) {
+                    throw new Error("Bad response from server");
+                }
+                return response.json();
+            })
+            .then(function(json) {
+                if (json.hasOwnProperty("error")) {
+                    throw new Error(json.error);
+                }
+                if (json.affectedRows !== 1) {
+                    throw new Error("Could not delete config.");
+                }
+                refreshFn();
+            });
+    }
+
+    handleServiceInstanceConfigurationClose = () => {
+        this.setState(state => ({detailViewDialog: null}));
+    }
+
+    handleServiceInstanceConfiguration = (serviceInstanceName) => {
+        var serviceInstance = this.state.serviceInstancesMap[serviceInstanceName];
+        console.log(serviceInstance.name);
+        this.setState(state => ({detailViewDialog: {
+                title: "Details for " + serviceInstanceName,
+                tables: [
+                    {
+                        title: "Configurations",
+                        columns: [
+                            {
+                                name: "Configuration Key",
+                                key: "configKey",
+                            },
+                            {
+                                name: "Value",
+                                key: "data",
+                            },
+                        ],
+                        dataEndpoint: "/serviceInstanceConfiguration/listForServiceInstance?serviceInstanceName=" + serviceInstanceName +
+                        "&serviceInstanceServiceName=" + serviceInstance.serviceName +
+                        "&serviceInstanceOrganizationName=" + this.props.organizationName,
+                        addFn: this.handleCreateServiceInstanceConfiguration.bind(this, serviceInstance.name),
+                        deleteFn: this.handleDeleteServiceInstanceConfiguration.bind(this, serviceInstance.name),
+                    },
+                    {
+                        title: "Keys",
+                        columns: [
+                            {
+                                name: "Key",
+                                key: "keyValue",
+                            },
+                            {
+                                name: "Active until",
+                                key: "activeUntil",
+                            },
+                        ],
+                        dataEndpoint: "/serviceInstanceKey/listForServiceInstance?serviceInstanceName=" + serviceInstanceName +
+                        "&serviceInstanceServiceName=" + serviceInstance.serviceName +
+                        "&serviceInstanceOrganizationName=" + this.props.organizationName,
+                        addFn: this.handleCreateServiceInstanceKey.bind(this, serviceInstance.name),
+                        deleteFn: this.handleDeleteServiceInstanceKey.bind(this, serviceInstance.name),
+                    }
+                ],
+                onClose: this.handleServiceInstanceConfigurationClose.bind(this)
+            }}));
+    }
+
     handleServiceInstanceDetailsClose = () => {
         this.setState(state => ({detailViewDialog: null}));
     }
@@ -535,71 +700,20 @@ class ClippedDrawer extends React.Component {
                             }
                         ],
                     },
-                    {
-                        title: "Configurations",
-                        columns: [
-                            {
-                                name: "Configuration Key",
-                                key: "configKey",
-                            },
-                            {
-                                name: "Value",
-                                key: "data",
-                            },
-                        ],
-                        dataEndpoint: "/serviceInstanceConfiguration/listForServiceInstance?serviceInstanceName=" + serviceInstanceName +
-                        "&serviceInstanceServiceName=" + serviceInstance.serviceName +
-                        "&serviceInstanceOrganizationName=" + this.props.organizationName,
-                    },
-                    {
-                        title: "Keys",
-                        columns: [
-                            {
-                                name: "Key",
-                                key: "keyValue",
-                            },
-                            {
-                                name: "Active until",
-                                key: "activeUntil",
-                            },
-                        ],
-                        dataEndpoint: "/serviceInstanceKey/listForServiceInstance?serviceInstanceName=" + serviceInstanceName +
-                        "&serviceInstanceServiceName=" + serviceInstance.serviceName +
-                        "&serviceInstanceOrganizationName=" + this.props.organizationName,
-                    }
                 ],
                 onClose: this.handleServiceInstanceDetailsClose.bind(this)
             }}));
     }
 
-    handleVirtualMachineDetailsClose = () => {
+    handleVirtualMachineConfigurationClose = () => {
         this.setState(state => ({detailViewDialog: null}));
     }
 
-    handleVirtualMachineDetails = (virtualMachineIpAddress) => {
+    handleVirtualMachineConfiguration = (virtualMachineIpAddress) => {
         var virtualMachine = this.state.virtualMachinesMap[virtualMachineIpAddress];
         this.setState(state => ({detailViewDialog: {
-                title: "Details for " + virtualMachineIpAddress,
+                title: "Configurations for " + virtualMachineIpAddress,
                 tables: [
-                    {
-                        title: "Overview",
-                        columns: [
-                            {
-                                name: "Service",
-                                key: "serviceName",
-                            },
-                            {
-                                name: "Region",
-                                key: "regionName",
-                            },
-                        ],
-                        staticdata: [
-                            {
-                                serviceName: virtualMachine.virtualMachineServiceName,
-                                regionName: virtualMachine.regionName,
-                            }
-                        ],
-                    },
                     {
                         title: "Hardware",
                         columns: [
@@ -630,12 +744,45 @@ class ClippedDrawer extends React.Component {
                         ],
                         staticdata: [
                             {
-                                state: virtualMachine.state,
+                                state: ENUM_MAPPINGS["virtualMachineState"][virtualMachine.state],
                                 cores: virtualMachine.cores,
                                 diskSpace: virtualMachine.diskSpace,
                                 ram: virtualMachine.ram,
                                 baseImageOs: virtualMachine.baseImageOs,
                                 baseImageVersion: virtualMachine.baseImageVersion,
+                            }
+                        ],
+                    },
+                ],
+                onClose: this.handleVirtualMachineConfigurationClose.bind(this)
+            }}));
+    }
+
+    handleVirtualMachineDetailsClose = () => {
+        this.setState(state => ({detailViewDialog: null}));
+    }
+
+    handleVirtualMachineDetails = (virtualMachineIpAddress) => {
+        var virtualMachine = this.state.virtualMachinesMap[virtualMachineIpAddress];
+        this.setState(state => ({detailViewDialog: {
+                title: "Details for " + virtualMachineIpAddress,
+                tables: [
+                    {
+                        title: "Overview",
+                        columns: [
+                            {
+                                name: "Service",
+                                key: "serviceName",
+                            },
+                            {
+                                name: "Region",
+                                key: "regionName",
+                            },
+                        ],
+                        staticdata: [
+                            {
+                                serviceName: virtualMachine.virtualMachineServiceName,
+                                regionName: virtualMachine.regionName,
                             }
                         ],
                     },
@@ -686,6 +833,94 @@ class ClippedDrawer extends React.Component {
                         permissions: permissions
                     }
                 })
+            })
+    }
+
+    handleCreateVirtualMachineAccessGroupPermission = (virtualMachineIpAddress, organizationName) => {
+        var url = encodeURI(BASE_API_URL + "/accessGroup/listOrganization?organizationName=" + organizationName)
+        fetch(url)
+            .then((response) => {
+                if (response.status >= 400) {
+                    throw new Error("Bad response from server")
+                }
+                return response.json()
+            })
+            .then((json) => {
+                if (json.data.length === 0) {
+                    throw new Error("No access groups matching organization found, you should create some")
+                }
+
+                var accessGroups = JSON.parse(json.data)
+                this.setState({
+                    creationDialog: {
+                        titleText: "Grant Access Permission for " + virtualMachineIpAddress,
+                        fields: [
+                            { name: "Access Group", options: accessGroups, keyfn: r => r.name, displayfn: r => r.name },
+                            { name: "Access Level", options: [1,2,3,4,5], keyfn: r => r, displayfn: r => r }
+                        ],
+                        onClose: this.handleCloseForCreateVirtualMachineAccessGroupPermission.bind(undefined, virtualMachineIpAddress, organizationName)
+                    }
+                })
+            })
+    }
+
+    handleCloseForCreateVirtualMachineAccessGroupPermission = (virtualMachineIpAddress, organizationName, result) => {
+        var url = encodeURI(BASE_API_URL + "/virtualMachineAccessGroupPermissions/create?vmIp=" + virtualMachineIpAddress +
+            "&orgName=" + organizationName + "&groupName=" + result["Access Group"] + "&accessLevel=" + result["Access Level"])
+
+        fetch(url)
+            .then((response) => {
+                if (response.status >= 400) {
+                    throw new Error("Bad response from server");
+                }
+                return response.json();
+            })
+            .then((json) => {
+                if (json.hasOwnProperty("error")) {
+                    throw new Error(json.error);
+                }
+                if (json.affectedRows !== 1) {
+                    throw new Error("Could not add virtual machine access group permission.");
+                }
+
+                this.setState({ creationDialog: null })
+                this.handleVirtualMachineAccess(virtualMachineIpAddress)
+            })
+    }
+
+    handleDeleteVirtualMachineAccessGroupPermission = (virtualMachineIpAddress, organizationName, accessGroup) => {
+        if (this.state.confirmationDialog === null && !this.state.deleteVirtualMachineAccessGroupPermissionConfirmed) {
+            this.setState(state => ({confirmationDialog: {
+                titleText: "Are you sure you want to revoke " + accessGroup + "'s access to " + virtualMachineIpAddress + "?",
+                contentText: "This action cannot be reversed.",
+                yesText: "Yes",
+                noText: "No",
+                onClose: this.handleCloseForDeleteVirtualMachineAccessGroupPermission.bind(undefined, virtualMachineIpAddress, organizationName, accessGroup)
+            }}));
+            return;
+        }
+    }
+
+    handleCloseForDeleteVirtualMachineAccessGroupPermission = (virtualMachineIpAddress, organizationName, accessGroup, result) => {
+        this.setState({ confirmationDialog: null })
+        if (!result) return
+        this.setState({ deleteVirtualMachineAccessGroupPermissionConfirmed: false })
+
+        var url = encodeURI(BASE_API_URL + "/virtualMachineAccessGroupPermissions/delete?vmIp=" + virtualMachineIpAddress +
+            "&orgName=" + organizationName + "&groupName=" + accessGroup)
+
+        fetch(url)
+            .then(response => {
+                if (response.status >= 400) {
+                    throw new Error("Bad response from server");
+                }
+                return response.json();
+            })
+            .then(json => {
+                if (json.affectedRows !== 1) {
+                    throw new Error("Nothing to delete on server");
+                }
+                this.handleVirtualMachineAccess(virtualMachineIpAddress)
             })
     }
 
@@ -1221,7 +1456,7 @@ class ClippedDrawer extends React.Component {
                 var data = JSON.parse(json.data);
                 self.setState(state => ({creationDialog: {
                         titleText: "Purchasing Service " + service.name,
-                        fields: [
+                        createText: "Purchase",fields: [
                             {name: "Credit Card", options: self.state.organizationCreditCards, keyfn: r => r.cardNumber, displayfn: r => r.cardNumber},
                             {name: "Subscription Length", options: data, keyfn: r => r.serviceTypeName, displayfn: r => r.serviceTypeName}
                         ],
@@ -1477,15 +1712,15 @@ class ClippedDrawer extends React.Component {
                                     </ListItemIcon>
                                     <ListItemText inset primary="Store"/>
                                 </ListItem>
-                                <ListItem button onClick={this.handleClick("my-services")} className={classes.nested}
+                                {this.state.organizationActiveSubscriptions.length > 0 && <ListItem button onClick={this.handleClick("my-services")} className={classes.nested}
                                           selected={this.state.activePageId === "my-services"}>
                                     <ListItemIcon>
                                         <ViewModule/>
                                     </ListItemIcon>
                                     <ListItemText inset primary="My services"/>
                                     {this.state.myServicesOpen ? <ExpandLess/> : <ExpandMore/>}
-                                </ListItem>
-                                <Collapse in={this.state.myServicesOpen} timeout="auto" unmountOnExit>
+                                </ListItem>}
+                                {this.state.organizationActiveSubscriptions.length > 0 && <Collapse in={this.state.myServicesOpen} timeout="auto" unmountOnExit>
                                     <List>
                                         {this.state.organizationActiveSubscriptions.map(function(service, idx){
                                             return (
@@ -1498,7 +1733,7 @@ class ClippedDrawer extends React.Component {
                                                 </ListItem>
                                             )}.bind(this))}
                                     </List>
-                                </Collapse>
+                                </Collapse>}
                                 <ListItem button onClick={this.handleClick("virtual-machines")}
                                           className={classes.nested}
                                           selected={this.state.activePageId === "virtual-machines"}>
@@ -1604,7 +1839,7 @@ class ClippedDrawer extends React.Component {
                         <div>
                         {this.state.organizationVirtualMachines.map(function (virtualMachine, idx) {
                             return (<Card className={classes.card} key={virtualMachine.ipAddress}>
-                                <CardActionArea>
+                                <CardActionArea onClick={this.handleVirtualMachineDetails.bind(this, virtualMachine.ipAddress)}>
                                     <CardMedia
                                         className={classes.media}
                                         image={(!this.state.servicesMap || !this.state.servicesMap.hasOwnProperty(virtualMachine.virtualMachineServiceName)
@@ -1622,12 +1857,13 @@ class ClippedDrawer extends React.Component {
                                     </CardContent>
                                 </CardActionArea>
                                 <CardActions>
-                                    <Button size="small" color="primary" onClick={this.handleVirtualMachineDetails.bind(this, virtualMachine.ipAddress)}>
-                                        Details
+                                    <Button size="small" color="primary" onClick={this.handleVirtualMachineConfiguration.bind(this, virtualMachine.ipAddress)}>
+                                        Configure
                                     </Button>
                                     <Button size="small" color="primary" onClick={this.handleVirtualMachineAccess.bind(this, virtualMachine.ipAddress)}>
                                         Access
                                     </Button>
+                                    <br/>
                                     <Button size="small" color="primary" onClick={this.handleVirtualMachineLogs.bind(this, virtualMachine.ipAddress)}>
                                         Logs
                                     </Button>
@@ -1649,7 +1885,7 @@ class ClippedDrawer extends React.Component {
                         <div>
                         {this.state.organizationServiceInstances.map(function (serviceInstance, idx) {
                             return (<Card className={classes.card} key={serviceInstance.name}>
-                                <CardActionArea>
+                                <CardActionArea onClick={this.handleServiceInstanceDetails.bind(this, serviceInstance.name)}>
                                     <CardMedia
                                         className={classes.media}
                                         image={(!this.state.servicesMap || !this.state.servicesMap.hasOwnProperty(serviceInstance.serviceName)
@@ -1667,8 +1903,8 @@ class ClippedDrawer extends React.Component {
                                 </CardActionArea>
                                 <CardActions>
                                     <Button size="small" color="primary"
-                                            onClick={this.handleServiceInstanceDetails.bind(this, serviceInstance.name)}>
-                                        View details
+                                            onClick={this.handleServiceInstanceConfiguration.bind(this, serviceInstance.name)}>
+                                        Configure
                                     </Button>
                                     <Button size="small" color="primary" onClick={this.handleDeleteServiceInstance.bind(this, serviceInstance.name)}>
                                         Terminate
@@ -1689,7 +1925,7 @@ class ClippedDrawer extends React.Component {
                             <Typography variant="headline" gutterBottom>Event Logs for {this.state.virtualMachineLogs.ipAddress}</Typography>
                             <Grid item xs={12}>
                                 <Paper className={classes.paper}>
-                                    <Table classname={classes.table}>
+                                    <Table className={classes.table}>
                                         <TableHead>
                                             <TableRow>
                                                 <TableCell>Log Number</TableCell>
@@ -1718,9 +1954,12 @@ class ClippedDrawer extends React.Component {
                     {this.state.activePageId === "vm-access" && <div>
                         <Grid container spacing={24}>
                             <Typography variant="headline" gutterBottom>Access Group Permissions for {this.state.virtualMachineAccessGroupPermissions.ipAddress}</Typography>
+                            <Button onClick={this.handleCreateVirtualMachineAccessGroupPermission.bind(this, this.state.virtualMachineAccessGroupPermissions.ipAddress, this.props.organizationName)}>
+                                <Typography variant="headline" gutterBottom>+</Typography>
+                            </Button>
                             <Grid item xs={12}>
                                 <Paper className={classes.paper}>
-                                    <Table classname={classes.table}>
+                                    <Table className={classes.table}>
                                         <TableHead>
                                             <TableRow>
                                                 <TableCell>Group Name</TableCell>
@@ -1734,7 +1973,11 @@ class ClippedDrawer extends React.Component {
                                                     <TableRow key={permission.VirtualMachineIpAddress+'-'+permission.accessGroupName}>
                                                         <TableCell>{permission.accessGroupName}</TableCell>
                                                         <TableCell>{permission.accessLevel}</TableCell>
-                                                        <TableCell>Delete</TableCell>
+                                                        <TableCell>
+                                                            <Button onClick={this.handleDeleteVirtualMachineAccessGroupPermission.bind(this, permission.VirtualMachineIpAddress, permission.accessGroupOrganizationName, permission.accessGroupName)}>
+                                                                Delete
+                                                            </Button>
+                                                        </TableCell>
                                                     </TableRow>
                                                 )
                                             })}
@@ -1747,7 +1990,7 @@ class ClippedDrawer extends React.Component {
                     {this.state.activePageId === "virtual-machines" && <div>
                         {this.state.organizationVirtualMachines.map(function (virtualMachine, idx) {
                             return (<Card className={classes.card} key={virtualMachine.ipAddress}>
-                                <CardActionArea>
+                                <CardActionArea onClick={this.handleVirtualMachineDetails.bind(this, virtualMachine.ipAddress)}>
                                     <CardMedia
                                         className={classes.media}
                                         image={(!this.state.servicesMap || !this.state.servicesMap.hasOwnProperty(virtualMachine.virtualMachineServiceName)
@@ -1765,8 +2008,8 @@ class ClippedDrawer extends React.Component {
                                     </CardContent>
                                 </CardActionArea>
                                 <CardActions>
-                                    <Button size="small" color="primary" onClick={this.handleVirtualMachineDetails.bind(this, virtualMachine.ipAddress)}>
-                                        Details
+                                    <Button size="small" color="primary" onClick={this.handleVirtualMachineConfiguration.bind(this, virtualMachine.ipAddress)}>
+                                        Configure
                                     </Button>
                                     <Button size="small" color="primary" onClick={this.handleVirtualMachineAccess.bind(this, virtualMachine.ipAddress)}>
                                         Access

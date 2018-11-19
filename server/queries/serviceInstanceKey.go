@@ -14,8 +14,7 @@ func CreateServiceInstanceKey(db *sql.DB, params url.Values) (data []byte, err e
 		result                          sql.Result
 		response                        = SQLResponse{}
 		tx                              *sql.Tx
-		keyValue                        string
-		activeUntilStr                  string // TODO
+		keyValue                        = common.GenerateRandomHash(16)
 		serviceInstanceName             string
 		serviceInstanceServiceName      string
 		serviceInstanceOrganizationName string
@@ -23,12 +22,6 @@ func CreateServiceInstanceKey(db *sql.DB, params url.Values) (data []byte, err e
 
 	if tx, err = db.Begin(); err != nil {
 		return nil, err
-	}
-	if keyValue, err = common.GetRequiredParam(params, "keyValue"); err != nil {
-		return
-	}
-	if activeUntilStr, err = common.GetRequiredParam(params, "activeUntil"); err != nil {
-		return
 	}
 	if serviceInstanceName, err = common.GetRequiredParam(params, "serviceInstanceName"); err != nil {
 		return
@@ -39,9 +32,9 @@ func CreateServiceInstanceKey(db *sql.DB, params url.Values) (data []byte, err e
 	if serviceInstanceOrganizationName, err = common.GetRequiredParam(params, "serviceInstanceOrganizationName"); err != nil {
 		return
 	}
-	if result, err = tx.Exec("INSERT INTO ServiceInstanceKey (keyValue,activeUntil,serviceInstanceServiceName,serviceInstanceOrganizationName) "+
-		"VALUES(?,?,?,?,?);",
-		keyValue, activeUntilStr, serviceInstanceName, serviceInstanceServiceName, serviceInstanceOrganizationName); err != nil {
+	if result, err = tx.Exec("INSERT INTO ServiceInstanceKey (keyValue,activeUntil,serviceInstanceName,serviceInstanceServiceName,serviceInstanceOrganizationName) "+
+		"VALUES(?,(NOW() + INTERVAL 1 DAY),?,?,?);",
+		keyValue, serviceInstanceName, serviceInstanceServiceName, serviceInstanceOrganizationName); err != nil {
 		tx.Rollback()
 		return
 	}

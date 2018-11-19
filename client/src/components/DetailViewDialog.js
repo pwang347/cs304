@@ -13,6 +13,7 @@ import TableCell from '@material-ui/core/TableCell';
 import TableHead from '@material-ui/core/TableHead';
 import TableRow from '@material-ui/core/TableRow';
 import Typography from '@material-ui/core/Typography';
+import Button from '@material-ui/core/Button';
 
 const styles = {}
 
@@ -56,6 +57,14 @@ class DetailViewDialog extends React.Component {
     handleClose = () => {
       this.props.dialog.onClose();
     }
+
+    handleAdd = (table) => {
+        table.addFn(this.load.bind(this));
+    }
+
+    handleDelete = (table, row) => {
+        table.deleteFn(row, this.load.bind(this));
+    }
   
     render() {
       const { classes, onClose, dialog, ...other } = this.props;
@@ -71,6 +80,7 @@ class DetailViewDialog extends React.Component {
                         <Typography>
                             {table.title}
                         </Typography>
+                        {table.hasOwnProperty("addFn") && <Button color="primary" onClick={this.handleAdd.bind(this, table)}>Add</Button>}
                         </ListItem>
                         <ListItem>
                         <Table>
@@ -81,6 +91,7 @@ class DetailViewDialog extends React.Component {
                                     <TableCell key={column.key}>
                                         {column.name}
                                     </TableCell>)})}
+                            {table.hasOwnProperty("deleteFn") && <TableCell></TableCell>}
                             </TableRow>
                             </TableHead>
                             <TableBody>
@@ -93,6 +104,7 @@ class DetailViewDialog extends React.Component {
                                         <TableCell key={table.title + "row:" + rowidx + "col:" + colidx}>
                                             {row[column.key]}
                                         </TableCell>)}.bind(this))}
+                                    {table.hasOwnProperty("deleteFn") && <TableCell><Button color="primary" onClick={this.handleDelete.bind(this, table, row)}>Delete</Button></TableCell>}
                                     </TableRow>
                                 )
                             }.bind(this))}

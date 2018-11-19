@@ -87,18 +87,20 @@ var (
 		"listForServiceInstance": queries.QueryServiceInstanceKeys,
 	}
 	serviceSubscriptionQueries = map[string]query{
-		"create":                  		queries.CreateServiceSubscriptionTransaction,
-		"delete":                  		queries.DeleteServiceSubscriptionTransactionByTransaction,
-		"listActiveSubscriptions": 		queries.ListAllActiveServiceSubscriptionTransactions,
-		"listTransactions":        		queries.ListAllCompletedTransactions,
+		"create":                       queries.CreateServiceSubscriptionTransaction,
+		"delete":                       queries.DeleteServiceSubscriptionTransactionByTransaction,
+		"listActiveSubscriptions":      queries.ListAllActiveServiceSubscriptionTransactions,
+		"listTransactions":             queries.ListAllCompletedTransactions,
 		"listCurrentMonthTransactions": queries.GetTransactionsForCurrentMonth,
-		"listExpiredSubscriptions":		queries.GetExpiredServiceSubscriptions,
+		"listExpiredSubscriptions":     queries.GetExpiredServiceSubscriptions,
 	}
 	virtualMachineQueries = map[string]query{
 		"create":                  queries.CreateVirtualMachine,
 		"delete":                  queries.DeleteVirtualMachine,
 		"listOrganization":        queries.QueryVirtualMachineOrganization,
 		"listServiceOrganization": queries.QueryVirtualMachineServiceOrganization,
+		"update":                  queries.UpdateVirtualMachine,
+		"updateState":             queries.UpdateVirtualMachineState,
 	}
 	userQueries = map[string]query{
 		"create":  queries.CreateUser,
@@ -106,14 +108,14 @@ var (
 		"isAdmin": queries.UserIsAdminForOrganization,
 		"select":  queries.SelectUser,
 		"update":  queries.UpdateUser,
-		"login":  queries.UserLogin,
+		"login":   queries.UserLogin,
 	}
 	eventLogQueries = map[string]query{
 		"byVirtualMachine": queries.QueryEventLogsForVirtualMachine,
 	}
 	virtualMachineAccessGroupPermissionQueries = map[string]query{
-		"create": queries.CreateVirtualMachineAccessGroupPermission,
-		"delete": queries.DeleteVirtualMachineAccessGroupPermission,
+		"create":           queries.CreateVirtualMachineAccessGroupPermission,
+		"delete":           queries.DeleteVirtualMachineAccessGroupPermission,
 		"byVirtualMachine": queries.QueryVirtualMachineAccessGroupPermissions,
 	}
 )

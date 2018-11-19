@@ -1,8 +1,15 @@
 export const BASE_API_URL = process.env.BASE_API_URL || "http://localhost:4000/api";
 export const ENUM_MAPPINGS = {
     "virtualMachineState": {
-        "0": "Powered Off",
+        "0": "Stopped",
         "1": "Running",
         "2": "Error",
     },
 };
+export const DATA_DEFAULTS = {
+    "virtualMachine": {
+        "cores": [1, 2, 4],
+        "diskSpace":  [128, 256, 512, 1024],
+        "ram": [1, 4, 8, 16],
+    }
+}

@@ -15,7 +15,8 @@ import TableRow from '@material-ui/core/TableRow';
 import Typography from '@material-ui/core/Typography';
 import Button from '@material-ui/core/Button';
 
-const styles = {}
+const styles = theme => ({
+});
 
 class DetailViewDialog extends React.Component {
 
@@ -31,7 +32,13 @@ class DetailViewDialog extends React.Component {
         var self = this;
         for (var table of this.props.dialog.tables) {
             if (table.staticdata) {
-                this.state.data[table.title] = table.staticdata;
+                var staticdata = table.staticdata.map((d) => Object.assign({}, d));
+                for (var idx in staticdata) {
+                    for (var key in staticdata[idx]) {
+                        staticdata[idx][key] = typeof staticdata[idx][key] === "function" ? staticdata[idx][key]() : staticdata[idx][key];
+                    }
+                }
+                this.state.data[table.title] = staticdata;
                 this.setState(state => ({data: this.state.data}));
                 continue;
             }
@@ -65,17 +72,25 @@ class DetailViewDialog extends React.Component {
     handleDelete = (table, row) => {
         table.deleteFn(row, this.load.bind(this));
     }
+
+    handleUpdate = (table, row) => {
+        table.updateFn(row, this.load.bind(this));
+    }
+
+    handleAction = (action, row) => {
+        action(row, this.load.bind(this));
+    }
   
     render() {
       const { classes, onClose, dialog, ...other } = this.props;
       return (
-        <Dialog onEnter={this.handleOpen} onClose={this.handleClose} aria-labelledby="simple-dialog-title" {...other}>
+        <Dialog onEnter={this.handleOpen} onClose={this.handleClose} aria-labelledby="simple-dialog-title" className={classes.root} {...other}>
           <DialogTitle>{dialog.title}</DialogTitle>
           <DialogContent>
               <div>
                 {dialog.tables.map(function (table, idx) {
                 return (
-                    <List key={idx}>
+                    <List key={idx} width="100%">
                         <ListItem>
                         <Typography>
                             {table.title}
@@ -92,6 +107,12 @@ class DetailViewDialog extends React.Component {
                                         {column.name}
                                     </TableCell>)})}
                             {table.hasOwnProperty("deleteFn") && <TableCell></TableCell>}
+                            {table.hasOwnProperty("updateFn") && <TableCell></TableCell>}
+                            {table.hasOwnProperty("customActions") && table.customActions.map(function(action, idx){
+                                        return (
+                                            <TableCell key={"action " + idx}></TableCell>
+                                        )
+                                    })}
                             </TableRow>
                             </TableHead>
                             <TableBody>
@@ -105,6 +126,14 @@ class DetailViewDialog extends React.Component {
                                             {row[column.key]}
                                         </TableCell>)}.bind(this))}
                                     {table.hasOwnProperty("deleteFn") && <TableCell><Button color="primary" onClick={this.handleDelete.bind(this, table, row)}>Delete</Button></TableCell>}
+                                    {table.hasOwnProperty("updateFn") && <TableCell><Button color="primary" onClick={this.handleUpdate.bind(this, table, row)}>Update</Button></TableCell>}
+                                    {table.hasOwnProperty("customActions") && table.customActions.map(function(action, idx){
+                                        return (
+                                            <TableCell key={"action" +idx}><Button color="primary"
+                                            onClick={this.handleAction.bind(this, action.hasOwnProperty("nestedFn")? action.fn() : action.fn, row)}>
+                                            {typeof action.name === "function"? action.name() : action.name}</Button></TableCell>
+                                        )
+                                    }.bind(this))}
                                     </TableRow>
                                 )
                             }.bind(this))}

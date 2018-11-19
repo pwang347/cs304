@@ -23,7 +23,7 @@ import Camera from '@material-ui/icons/Camera';
 import Computer from '@material-ui/icons/Computer';
 import AttachMoney from '@material-ui/icons/AttachMoney';
 import CreditCardIcon from '@material-ui/icons/CreditCard';
-import {ENUM_MAPPINGS, BASE_API_URL} from "../config";
+import {ENUM_MAPPINGS, BASE_API_URL, DATA_DEFAULTS} from "../config";
 import Card from '@material-ui/core/Card';
 import CardActionArea from '@material-ui/core/CardActionArea';
 import CardActions from '@material-ui/core/CardActions';
@@ -621,6 +621,88 @@ class ClippedDrawer extends React.Component {
             });
     }
 
+    handleUpdateVirtualMachine = (virtualMachineIp, row, refreshFn) => {
+        var virtualMachine = this.state.virtualMachinesMap[virtualMachineIp];
+        this.setState(state => ({creationDialog: {
+            titleText: "Update " + virtualMachineIp,
+            fields: [
+                {name: "Description"},
+                {name: "Cores", options: DATA_DEFAULTS["virtualMachine"]["cores"]},
+                {name: "Disk space", options: DATA_DEFAULTS["virtualMachine"]["diskSpace"]},
+                {name: "RAM", options: DATA_DEFAULTS["virtualMachine"]["ram"]},
+                {name: "Base image", options: this.state.baseImages, keyfn: r => r.os + " " + r.version, displayfn: r => r.os + " " + r.version},
+            ],
+            updateDefaults: {
+                "Description": row.description,
+                "Cores": row.cores,
+                "Disk space": row.diskSpace,
+                "RAM": row.ram,
+                "Base image": row.baseImageOs + " " + row.baseImageVersion,
+            },
+            onClose: this.handleCloseForUpdateVirtualMachine.bind(this, virtualMachineIp, refreshFn),
+        }}));
+    }
+
+    handleCloseForUpdateVirtualMachine = (virtualMachineIpAddress, refreshFn, result) => {
+        this.setState(state => ({
+            creationDialog: null,
+        }));
+        if (!result) return;
+        var baseImage = result["Base image"].split(" ");
+        var url = BASE_API_URL + "/virtualMachine/update?ipAddress=" + virtualMachineIpAddress
+        + "&description=" + result["Description"]
+        + "&cores=" + result["Cores"]
+        + "&diskSpace=" + result["Disk space"]
+        + "&ram=" + result["RAM"]
+        + "&baseImageOs=" + baseImage[0]
+        + "&baseImageVersion=" + baseImage[1];
+        var self = this;
+        fetch(url)
+            .then(function (response) {
+                if (response.status >= 400) {
+                    throw new Error("Bad response from server");
+                }
+                return response.json();
+            })
+            .then(function(json) {
+                if (json.hasOwnProperty("error")) {
+                    throw new Error(json.error);
+                }
+                if (json.affectedRows !== 1) {
+                    throw new Error("Could not update config.");
+                }
+                refreshFn();
+                this.loadOrganizationVirtualMachines();
+            });
+    }
+
+    handleToggleVirtualMachineState = (virtualMachineIpAddress, row, refreshFn) => {
+        var virtualMachine = this.state.virtualMachinesMap[virtualMachineIpAddress];
+        var newState = (ENUM_MAPPINGS["virtualMachineState"][virtualMachine.state] === "Stopped" ? 1 : 0);
+        console.log(newState);
+        var url = BASE_API_URL + "/virtualMachine/updateState?ipAddress=" + virtualMachineIpAddress
+        + "&state=" + newState;
+        var self = this;
+        fetch(url)
+            .then(function (response) {
+                if (response.status >= 400) {
+                    throw new Error("Bad response from server");
+                }
+                return response.json();
+            })
+            .then(function(json) {
+                if (json.hasOwnProperty("error")) {
+                    throw new Error(json.error);
+                }
+                if (json.affectedRows !== 1) {
+                    throw new Error("Could not update virtualMachine.");
+                }
+                self.state.virtualMachinesMap[virtualMachineIpAddress].state = newState;
+                self.loadOrganizationVirtualMachines();
+                refreshFn();
+            });
+    }
+
     handleServiceInstanceConfigurationClose = () => {
         this.setState(state => ({detailViewDialog: null}));
     }
@@ -744,7 +826,7 @@ class ClippedDrawer extends React.Component {
                         ],
                         staticdata: [
                             {
-                                state: ENUM_MAPPINGS["virtualMachineState"][virtualMachine.state],
+                                state: this.getVirtualMachineState.bind(this, virtualMachineIpAddress),
                                 cores: virtualMachine.cores,
                                 diskSpace: virtualMachine.diskSpace,
                                 ram: virtualMachine.ram,
@@ -752,10 +834,25 @@ class ClippedDrawer extends React.Component {
                                 baseImageVersion: virtualMachine.baseImageVersion,
                             }
                         ],
+                        updateFn: this.handleUpdateVirtualMachine.bind(this, virtualMachineIpAddress),
+                        customActions: [
+                            {
+                                name: this.getStartStop.bind(this, virtualMachineIpAddress),
+                                fn: this.handleToggleVirtualMachineState.bind(this, virtualMachineIpAddress)
+                            },
+                        ],
                     },
                 ],
                 onClose: this.handleVirtualMachineConfigurationClose.bind(this)
             }}));
+    }
+
+    getStartStop(virtualMachineIpAddress){
+        return ENUM_MAPPINGS["virtualMachineState"][this.state.virtualMachinesMap[virtualMachineIpAddress].state] === "Stopped"? "Start" : "Stop";
+    }
+
+    getVirtualMachineState(virtualMachineIpAddress) {
+        return ENUM_MAPPINGS["virtualMachineState"][this.state.virtualMachinesMap[virtualMachineIpAddress].state];
     }
 
     handleVirtualMachineDetailsClose = () => {
@@ -1618,9 +1715,9 @@ class ClippedDrawer extends React.Component {
             titleText: "Create a new virtual machine for " + this.state.activeServiceName,
             fields: [
                 {name: "Description"},
-                {name: "Cores", options: [1, 2, 4], keyfn: r => r, displayfn: r => r},
-                {name: "Disk space", options: [128, 256, 512, 1024], keyfn: r => r, displayfn: r => r},
-                {name: "RAM", options: [1, 4, 8, 16], keyfn: r => r, displayfn: r => r},
+                {name: "Cores", options: DATA_DEFAULTS["virtualMachine"]["cores"]},
+                {name: "Disk space", options: DATA_DEFAULTS["virtualMachine"]["diskSpace"]},
+                {name: "RAM", options: DATA_DEFAULTS["virtualMachine"]["ram"]},
                 {name: "Region", options: this.state.regions, keyfn: r => r.name, displayfn: r => r.name},
                 {name: "Base image", options: this.state.baseImages, keyfn: r => r.os + " " + r.version, displayfn: r => r.os + " " + r.version},
             ],
@@ -2081,7 +2178,7 @@ class ClippedDrawer extends React.Component {
                                 </Paper>
                             </Grid>
                             <Grid item xs={12} sm={12}>
-                                <Typography variant="headline" gutterBottom>Spending Report For Month {new Date().getMonth() + 1}</Typography>
+                                <Typography variant="headline" gutterBottom>Spending Report for {new Date().getMonth() + 1}</Typography>
                                 <Paper className={classes.paper}>
                                     <Table className={classes.table}>
                                         <TableHead>

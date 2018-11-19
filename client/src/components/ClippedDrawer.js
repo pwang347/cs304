@@ -836,6 +836,94 @@ class ClippedDrawer extends React.Component {
             })
     }
 
+    handleCreateVirtualMachineAccessGroupPermission = (virtualMachineIpAddress, organizationName) => {
+        var url = encodeURI(BASE_API_URL + "/accessGroup/listOrganization?organizationName=" + organizationName)
+        fetch(url)
+            .then((response) => {
+                if (response.status >= 400) {
+                    throw new Error("Bad response from server")
+                }
+                return response.json()
+            })
+            .then((json) => {
+                if (json.data.length === 0) {
+                    throw new Error("No access groups matching organization found, you should create some")
+                }
+
+                var accessGroups = JSON.parse(json.data)
+                this.setState({
+                    creationDialog: {
+                        titleText: "Grant Access Permission for " + virtualMachineIpAddress,
+                        fields: [
+                            { name: "Access Group", options: accessGroups, keyfn: r => r.name, displayfn: r => r.name },
+                            { name: "Access Level", options: [1,2,3,4,5], keyfn: r => r, displayfn: r => r }
+                        ],
+                        onClose: this.handleCloseForCreateVirtualMachineAccessGroupPermission.bind(undefined, virtualMachineIpAddress, organizationName)
+                    }
+                })
+            })
+    }
+
+    handleCloseForCreateVirtualMachineAccessGroupPermission = (virtualMachineIpAddress, organizationName, result) => {
+        var url = encodeURI(BASE_API_URL + "/virtualMachineAccessGroupPermissions/create?vmIp=" + virtualMachineIpAddress +
+            "&orgName=" + organizationName + "&groupName=" + result["Access Group"] + "&accessLevel=" + result["Access Level"])
+
+        fetch(url)
+            .then((response) => {
+                if (response.status >= 400) {
+                    throw new Error("Bad response from server");
+                }
+                return response.json();
+            })
+            .then((json) => {
+                if (json.hasOwnProperty("error")) {
+                    throw new Error(json.error);
+                }
+                if (json.affectedRows !== 1) {
+                    throw new Error("Could not add virtual machine access group permission.");
+                }
+
+                this.setState({ creationDialog: null })
+                this.handleVirtualMachineAccess(virtualMachineIpAddress)
+            })
+    }
+
+    handleDeleteVirtualMachineAccessGroupPermission = (virtualMachineIpAddress, organizationName, accessGroup) => {
+        if (this.state.confirmationDialog === null && !this.state.deleteVirtualMachineAccessGroupPermissionConfirmed) {
+            this.setState(state => ({confirmationDialog: {
+                titleText: "Are you sure you want to revoke " + accessGroup + "'s access to " + virtualMachineIpAddress + "?",
+                contentText: "This action cannot be reversed.",
+                yesText: "Yes",
+                noText: "No",
+                onClose: this.handleCloseForDeleteVirtualMachineAccessGroupPermission.bind(undefined, virtualMachineIpAddress, organizationName, accessGroup)
+            }}));
+            return;
+        }
+    }
+
+    handleCloseForDeleteVirtualMachineAccessGroupPermission = (virtualMachineIpAddress, organizationName, accessGroup, result) => {
+        this.setState({ confirmationDialog: null })
+        if (!result) return
+        this.setState({ deleteVirtualMachineAccessGroupPermissionConfirmed: false })
+
+        var url = encodeURI(BASE_API_URL + "/virtualMachineAccessGroupPermissions/delete?vmIp=" + virtualMachineIpAddress +
+            "&orgName=" + organizationName + "&groupName=" + accessGroup)
+
+        fetch(url)
+            .then(response => {
+                if (response.status >= 400) {
+                    throw new Error("Bad response from server");
+                }
+                return response.json();
+            })
+            .then(json => {
+                if (json.affectedRows !== 1) {
+                    throw new Error("Nothing to delete on server");
+                }
+                this.handleVirtualMachineAccess(virtualMachineIpAddress)
+            })
+    }
+
     handleCloseForDeleteServiceInstance = (serviceInstanceName, result) => {
         this.setState(state => ({
             confirmationDialog: null,
@@ -1831,7 +1919,7 @@ class ClippedDrawer extends React.Component {
                             <Typography variant="headline" gutterBottom>Event Logs for {this.state.virtualMachineLogs.ipAddress}</Typography>
                             <Grid item xs={12}>
                                 <Paper className={classes.paper}>
-                                    <Table classname={classes.table}>
+                                    <Table className={classes.table}>
                                         <TableHead>
                                             <TableRow>
                                                 <TableCell>Log Number</TableCell>
@@ -1860,9 +1948,12 @@ class ClippedDrawer extends React.Component {
                     {this.state.activePageId === "vm-access" && <div>
                         <Grid container spacing={24}>
                             <Typography variant="headline" gutterBottom>Access Group Permissions for {this.state.virtualMachineAccessGroupPermissions.ipAddress}</Typography>
+                            <Button onClick={this.handleCreateVirtualMachineAccessGroupPermission.bind(this, this.state.virtualMachineAccessGroupPermissions.ipAddress, this.props.organizationName)}>
+                                <Typography variant="headline" gutterBottom>+</Typography>
+                            </Button>
                             <Grid item xs={12}>
                                 <Paper className={classes.paper}>
-                                    <Table classname={classes.table}>
+                                    <Table className={classes.table}>
                                         <TableHead>
                                             <TableRow>
                                                 <TableCell>Group Name</TableCell>
@@ -1876,7 +1967,11 @@ class ClippedDrawer extends React.Component {
                                                     <TableRow key={permission.VirtualMachineIpAddress+'-'+permission.accessGroupName}>
                                                         <TableCell>{permission.accessGroupName}</TableCell>
                                                         <TableCell>{permission.accessLevel}</TableCell>
-                                                        <TableCell>Delete</TableCell>
+                                                        <TableCell>
+                                                            <Button onClick={this.handleDeleteVirtualMachineAccessGroupPermission.bind(this, permission.VirtualMachineIpAddress, permission.accessGroupOrganizationName, permission.accessGroupName)}>
+                                                                Delete
+                                                            </Button>
+                                                        </TableCell>
                                                     </TableRow>
                                                 )
                                             })}

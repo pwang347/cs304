@@ -78,7 +78,7 @@ func DeleteVirtualMachineAccessGroupPermission(db *sql.DB, params url.Values) (d
 		return
 	}
 
-	if result, err = tx.Exec("DELETE FROM VirtualMachineAccessGroupPermissions WHERE VirtualMachineIpAddress = ? AND accessGroupOrganizationName = ? AND accessGroupName = ?;",
+	if result, err = tx.Exec("DELETE FROM VirtualMachineAccessGroupPermissions WHERE VirtualMachineIpAddress=? AND accessGroupOrganizationName=? AND accessGroupName=?;",
 		vmIp, orgName, groupName); err != nil {
 		tx.Rollback()
 		return
@@ -95,7 +95,6 @@ func DeleteVirtualMachineAccessGroupPermission(db *sql.DB, params url.Values) (d
 
 func QueryVirtualMachineAccessGroupPermissions(db *sql.DB, params url.Values) (data []byte, err error) {
 	var (
-		result			sql.Result
 		response		= SQLResponse{}
 		tx					*sql.Tx
 		vmIp				string
@@ -108,14 +107,12 @@ func QueryVirtualMachineAccessGroupPermissions(db *sql.DB, params url.Values) (d
 		return
 	}
 
-	if result, err = tx.Exec("SELECT * FROM VirtualMachineAccessGroupPermissions WHERE VirtualMachineIpAddress = ?;", vmIp); err != nil {
+	if response.Data, response.AffectedRows, err = common.QueryJSON(tx, "SELECT * FROM VirtualMachineAccessGroupPermissions " +
+		"WHERE VirtualMachineIpAddress = ?;", vmIp); err != nil {
 		tx.Rollback()
 		return
 	}
 	if err = tx.Commit(); err != nil {
-		return
-	}
-	if response.AffectedRows, err = result.RowsAffected(); err != nil {
 		return
 	}
 	data, err = json.Marshal(response)

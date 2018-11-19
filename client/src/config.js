@@ -18,6 +18,11 @@ export const ENUM_MAPPINGS = {
         10: "October",
         11: "November",
         12: "December",
+    },
+    "accessLevel": {
+        0: "Restricted user (0)",
+        1: "Regular user (1)",
+        2: "Owner (2)",
     }
 };
 export const DATA_DEFAULTS = {

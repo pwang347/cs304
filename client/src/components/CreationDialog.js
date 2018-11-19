@@ -74,12 +74,12 @@ class CreationDialog extends React.Component {
                     <ListItem key={field.name}>
                         {field.hasOwnProperty("options")?
                     <div>
-                        <Typography>
-                            {this.state.data[field.name]}
-                        </Typography>
                         <Button onClick={this.handleSelectField.bind(this, field)}>
                             Select {field.name}
                         </Button>
+                        <Typography>
+                            {this.state.data[field.name]}
+                        </Typography>
                     </div>
                     :
                     <TextField

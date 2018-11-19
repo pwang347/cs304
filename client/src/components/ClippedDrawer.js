@@ -1007,7 +1007,7 @@ class ClippedDrawer extends React.Component {
                         titleText: "Grant Access Permission for " + virtualMachineIpAddress,
                         fields: [
                             { name: "Access Group", options: accessGroups, keyfn: r => r.name, displayfn: r => r.name },
-                            { name: "Access Level", options: [1,2,3,4,5], keyfn: r => r, displayfn: r => r }
+                            { name: "Access Level", options: [0,1,2], keyfn: r => r, displayfn: r => ENUM_MAPPINGS["accessLevel"][r] }
                         ],
                         onClose: this.handleCloseForCreateVirtualMachineAccessGroupPermission.bind(undefined, virtualMachineIpAddress, organizationName)
                     }
@@ -1016,6 +1016,10 @@ class ClippedDrawer extends React.Component {
     }
 
     handleCloseForCreateVirtualMachineAccessGroupPermission = (virtualMachineIpAddress, organizationName, result) => {
+        this.setState({ creationDialog: null })
+        if (!result){
+            return;
+        }
         var url = encodeURI(BASE_API_URL + "/virtualMachineAccessGroupPermissions/create?vmIp=" + virtualMachineIpAddress +
             "&orgName=" + organizationName + "&groupName=" + result["Access Group"] + "&accessLevel=" + result["Access Level"])
 
@@ -1033,8 +1037,6 @@ class ClippedDrawer extends React.Component {
                 if (json.affectedRows !== 1) {
                     throw new Error("Could not add virtual machine access group permission.");
                 }
-
-                this.setState({ creationDialog: null })
                 this.handleVirtualMachineAccess(virtualMachineIpAddress)
             })
     }
@@ -1707,6 +1709,7 @@ class ClippedDrawer extends React.Component {
                     {name: "New Password"},
                     {name: "Phone Number"},
                 ],
+                createText: "Update",
                 onClose: this.handleCloseForEditUserInfo.bind(undefined),
             }}));
     }
@@ -2127,11 +2130,9 @@ class ClippedDrawer extends React.Component {
                         </Grid>
                     </div>}
                     {this.state.activePageId === "vm-access" && <div>
+                    <Typography variant="h4" color="textSecondary">Access Group Permissions for {this.state.virtualMachineAccessGroupPermissions.ipAddress}</Typography>
+                        <Divider className={classes.titleDivider}/>
                         <Grid container spacing={24}>
-                            <Typography variant="headline" gutterBottom>Access Group Permissions for {this.state.virtualMachineAccessGroupPermissions.ipAddress}</Typography>
-                            <Button onClick={this.handleCreateVirtualMachineAccessGroupPermission.bind(this, this.state.virtualMachineAccessGroupPermissions.ipAddress, this.props.organizationName)}>
-                                <Typography variant="headline" gutterBottom>+</Typography>
-                            </Button>
                             <Grid item xs={12}>
                                 <Paper className={classes.paper}>
                                     <Table className={classes.table}>
@@ -2147,7 +2148,7 @@ class ClippedDrawer extends React.Component {
                                                 return (
                                                     <TableRow key={permission.VirtualMachineIpAddress+'-'+permission.accessGroupName}>
                                                         <TableCell>{permission.accessGroupName}</TableCell>
-                                                        <TableCell>{permission.accessLevel}</TableCell>
+                                                        <TableCell>{ENUM_MAPPINGS["accessLevel"][permission.accessLevel]}</TableCell>
                                                         <TableCell>
                                                             <Button onClick={this.handleDeleteVirtualMachineAccessGroupPermission.bind(this, permission.VirtualMachineIpAddress, permission.accessGroupOrganizationName, permission.accessGroupName)}>
                                                                 Delete
@@ -2161,6 +2162,9 @@ class ClippedDrawer extends React.Component {
                                 </Paper>
                             </Grid>
                         </Grid>
+                        <Button variant="contained" color="primary" onClick={this.handleCreateVirtualMachineAccessGroupPermission.bind(this, this.state.virtualMachineAccessGroupPermissions.ipAddress, this.props.organizationName)}>
+                               Add new permission rule
+                        </Button>
                     </div>}
                     {this.state.activePageId === "virtual-machines" && <div>
                     <Typography variant="h4" color="textSecondary">Virtual machines</Typography>

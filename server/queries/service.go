@@ -34,7 +34,7 @@ func GetServiceTypes(db *sql.DB, params url.Values) (data []byte, err error) {
 	var (
 		response = SQLResponse{}
 		tx       *sql.Tx
-		name	 string
+		name     string
 	)
 
 	if tx, err = db.Begin(); err != nil {
@@ -44,8 +44,8 @@ func GetServiceTypes(db *sql.DB, params url.Values) (data []byte, err error) {
 		return
 	}
 	if response.Data, response.AffectedRows, err = common.QueryJSON(tx,
-		"SELECT * FROM Service S, ServiceServiceTypePairs SSTP, ServiceType ST " +
-		"WHERE S.name = ? AND S.name = SSTP.serviceName AND SSTP.serviceType = ST.type;", name); err != nil {
+		"SELECT * FROM Service S, ServiceServiceTypePairs SSTP, ServiceType ST "+
+			"WHERE S.name = ? AND S.name = SSTP.serviceName AND SSTP.serviceType = ST.type;", name); err != nil {
 		tx.Rollback()
 		return
 	}
@@ -90,19 +90,19 @@ func GetServiceSubscriptions(db *sql.DB, params url.Values) (data []byte, err er
 // Complex division query that gets all services that have all types
 func GetAllServicesWithAllTypes(db *sql.DB, params url.Values) (data []byte, err error) {
 	var (
-		response         = SQLResponse{}
-		tx               *sql.Tx
+		response = SQLResponse{}
+		tx       *sql.Tx
 	)
 
 	if tx, err = db.Begin(); err != nil {
 		return nil, err
 	}
 	if response.Data, response.AffectedRows, err = common.QueryJSON(tx,
-		"select distinct s.name, s.description, s.isPreview, s.isEnabled, s.isVirtualMachineService, s.imageUrl " +
-		"from Service s, ServiceServiceTypePairs sst1 " +
-		"where s.name = sst1.serviceName and not exists (" +
-		"select st.type from ServiceType st where st.type not in (" +
-		"select sst2.serviceType from ServiceServiceTypePairs sst2 where sst1.serviceName = sst2.serviceName));"); err != nil {
+		"select distinct s.name, s.description, s.isPreview, s.isEnabled, s.isVirtualMachineService, s.imageUrl "+
+			"from Service s, ServiceServiceTypePairs sst1 "+
+			"where s.name = sst1.serviceName and not exists ("+
+			"select st.type from ServiceType st where st.type not in ("+
+			"select sst2.serviceType from ServiceServiceTypePairs sst2 where sst1.serviceName = sst2.serviceName));"); err != nil {
 		tx.Rollback()
 		return
 	}

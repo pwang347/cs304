@@ -108,6 +108,9 @@ const styles = theme => ({
     lowerBtn: {
         marginRight: theme.spacing.unit * 2,
     },
+    profile: {
+        marginBottom: theme.spacing.unit * 2,
+    }
 });
 
 const defaultImageUrl = "https://material-ui.com/static/images/cards/contemplative-reptile.jpg";
@@ -2269,7 +2272,7 @@ class ClippedDrawer extends React.Component {
                                 </Paper>
                             </Grid>
                             <Grid item xs={12} sm={12}>
-                                <Typography variant="headline" gutterBottom>Spending Report for {new Date().getMonth() + 1}</Typography>
+                                <Typography variant="headline" gutterBottom>Spending Report for {ENUM_MAPPINGS["months"][new Date().getMonth() + 1]}</Typography>
                                 <Paper className={classes.paper}>
                                     <Table className={classes.table}>
                                         <TableHead>
@@ -2444,10 +2447,9 @@ class ClippedDrawer extends React.Component {
                             </Grid>
                     </div>}
                     {this.state.activePageId === "my-profile" && <div>
-                        <Button onClick={this.handleClickChangeOrganization}>
-                            Change organization
-                        </Button>
-                        <Grid container spacing={24}>
+                        <Typography variant="h4" color="textSecondary">My profile</Typography>
+                        <Divider className={classes.titleDivider}/>
+                        <Grid className={classes.profile} container spacing={24}>
                             <Grid item xs={24}>
                                 <Paper>
                                     <List component="nav">
@@ -2465,9 +2467,12 @@ class ClippedDrawer extends React.Component {
                                         </ListItem>
                                     </List>
                                 </Paper>
-                                <Button onClick={this.handleEditUserInfo}>Edit User Information</Button>
                             </Grid>
                         </Grid>
+                        <Button variant="contained" color="primary" className={classes.lowerBtn} onClick={this.handleEditUserInfo}>Edit User Information</Button>
+                        <Button variant="contained" color="primary" className={classes.lowerBtn} onClick={this.handleClickChangeOrganization}>
+                            Change organization
+                        </Button>
                     </div>}
                     {this.state.detailViewDialog !== null &&
                     <DetailViewDialog open={this.state.detailViewDialog !== null} dialog={this.state.detailViewDialog}/>

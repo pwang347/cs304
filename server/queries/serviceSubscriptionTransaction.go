@@ -124,7 +124,10 @@ func ListAllActiveServiceSubscriptionTransactions(db *sql.DB, params url.Values)
 		return
 	}
 	if response.Data, response.AffectedRows, err = common.QueryJSON(tx, "SELECT * FROM "+
-		"ServiceSubscriptionTransaction SST, Service S WHERE S.name = SST.serviceName AND organizationName = ? AND activeUntil >= NOW();",
+		"ServiceSubscriptionTransaction SST, Service S, ServiceType ST, ServiceServiceTypePairs SSTP " +
+		"WHERE S.name = SST.serviceName AND S.name = SSTP.serviceName " +
+		"AND SSTP.serviceType = ST.type AND SST.type = SSTP.serviceType " +
+		"AND organizationName = ? AND activeUntil >= NOW();",
 		organizationName); err != nil {
 		tx.Rollback()
 		return
@@ -213,8 +216,10 @@ func GetExpiredServiceSubscriptions(db *sql.DB, params url.Values) (data []byte,
 		return
 	}
 	if response.Data, response.AffectedRows, err = common.QueryJSON(tx,
-		"SELECT * FROM ServiceSubscriptionTransaction WHERE organizationName = ? " +
-			"AND activeUntil < NOW() ;",
+		"SELECT * FROM ServiceSubscriptionTransaction SST, ServiceServiceTypePairs SSTP, ServiceType ST"+
+		" WHERE organizationName = ? " +
+			"AND activeUntil < NOW() AND SST.serviceName = SSTP.serviceName AND" +
+		" SST.type = SSTP.serviceType AND SSTP.serviceType = ST.type;",
 		organizationName); err != nil {
 		tx.Rollback()
 		return

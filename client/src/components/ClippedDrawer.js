@@ -1208,48 +1208,65 @@ class ClippedDrawer extends React.Component {
     // purchase a service, adds a subscription to table...
     // User should be able to pick a credit card and generates a transaction number, payment.
     handlePurchaseService = (service) => {
-        this.setState(state => ({creationDialog: {
-                titleText: "Purchasing Service " + service.name,
-                fields: [
-                    {name: "Credit Card", options: this.state.organizationCreditCards, keyfn: r => r.cardNumber, displayfn: r => r.cardNumber},
-                    {name: "Subscription Length", options: ["1 month", "6 months", "1 year"], keyfn: r => r, displayfn: r => r}
-                    ],
-                onClose: this.handleCloseForPurchaseService.bind(undefined, service),
-            }}));
+        var url = BASE_API_URL + "/service/listServiceTypes?serviceName=" + service.name;
+        var self = this;
+        fetch(url)
+            .then(function (response) {
+                if (response.status >= 400) {
+                    throw new Error("Bad response from server");
+                }
+                return response.json();
+            })
+            .then(function (json) {
+                var data = JSON.parse(json.data);
+                self.setState(state => ({creationDialog: {
+                        titleText: "Purchasing Service " + service.name,
+                        fields: [
+                            {name: "Credit Card", options: self.state.organizationCreditCards, keyfn: r => r.cardNumber, displayfn: r => r.cardNumber},
+                            {name: "Subscription Length", options: data, keyfn: r => r.serviceTypeName, displayfn: r => r.serviceTypeName}
+                        ],
+                        onClose: self.handleCloseForPurchaseService.bind(undefined, service, data),
+                    }}));
+            });
     }
 
-    handleCloseForPurchaseService = (service, result) => {
+    handleCloseForPurchaseService = (service, serviceTypeData, result) => {
         this.setState(state => ({
             creationDialog: null,
         }));
         if (!result) return;
-        this.handleCreateForPurchaseService(service, result);
+        var data = {};
+        for (var i = 0; i < serviceTypeData.length; i++) {
+            if (result["Subscription Length"] === serviceTypeData[i]["serviceTypeName"]) {
+                data = serviceTypeData[i];
+            }
+        }
+        this.handleCreateForPurchaseService(service, result, data);
     }
 
-    handleCreateForPurchaseService = (service, result) => {
+    handleCreateForPurchaseService = (service, result, data) => {
         if (this.state.confirmationDialog === null) {
             this.setState(state => ({confirmationDialog: {
-                    titleText: "Confirmation to purchasing " + service.name,
-                    contentText: "Your total will be $" + this.parsePriceFromSubscriptionLength(result["Subscription Length"]) +
+                    titleText: "Confirmation to purchasing " + data.name,
+                    contentText: "Your total will be $" + data.price +
                         ", charged to credit card: " + result["Credit Card"],
                     yesText: "Yes",
                     noText: "No",
-                    onClose: this.handleConfirmedPurchase.bind(undefined, service, result)
+                    onClose: this.handleConfirmedPurchase.bind(undefined, service, result, data)
                 }}));
             return;
         }
     }
 
-    handleConfirmedPurchase = (service, data, result) => {
+    handleConfirmedPurchase = (service, data, serviceData, result) => {
         this.setState(state => ({
             confirmationDialog: null,
         }));
         if (!result) return;
         var today = new Date();
-        // TODO: what is service type anyway
         var url = BASE_API_URL + "/serviceSubscriptionTransaction/create?organizationName=" + this.props.organizationName
-            + "&serviceType=" + "0"
-            + "&amountPaid=" + this.parsePriceFromSubscriptionLength(data["Subscription Length"])
+            + "&serviceType=" + serviceData.serviceType
+            + "&amountPaid=" + serviceData.price
             + "&processedTimestamp=" + this.convertJavaScriptDateToMySQL(today)
             + "&serviceName=" + service.name
             + "&description=" + service.description
@@ -1276,29 +1293,19 @@ class ClippedDrawer extends React.Component {
     parseActiveUntilFromSubscriptionLength = (subscriptionLength) => {
         var today = new Date();
         // not using UTC.... cuz i'm too lazy
-        if (subscriptionLength === "1 month") {
+        if (subscriptionLength === "One time") {
+            today.setFullYear(today.getFullYear() + 100);
+        }
+        if (subscriptionLength === "One month") {
             today.setMonth(today.getMonth() + 1);
         }
-        if (subscriptionLength === "6 months") {
+        if (subscriptionLength === "Six month") {
             today.setMonth(today.getMonth() + 6);
         }
-        if (subscriptionLength === "1 year") {
+        if (subscriptionLength === "One year") {
             today.setFullYear(today.getFullYear() + 1);
         }
         return this.convertJavaScriptDateToMySQL(today);
-    }
-
-    parsePriceFromSubscriptionLength = (subscriptionLength) => {
-        if (subscriptionLength === "1 month") {
-            return 100;
-        }
-        if (subscriptionLength === "6 months") {
-            return 500;
-        }
-        if (subscriptionLength === "1 year") {
-            return 900;
-        }
-        return 0;
     }
 
     handleEditUserInfo = () => {
@@ -1783,7 +1790,7 @@ class ClippedDrawer extends React.Component {
                                         <TableHead>
                                             <TableRow>
                                                 <TableCell>Service Name</TableCell>
-                                                <TableCell numeric>Service Type</TableCell>
+                                                <TableCell>Service Type</TableCell>
                                                 <TableCell>Description</TableCell>
                                                 <TableCell>Active Until</TableCell>
                                             </TableRow>
@@ -1795,7 +1802,7 @@ class ClippedDrawer extends React.Component {
                                                         <TableCell component="th" scope="row">
                                                             {activeSub.serviceName}
                                                         </TableCell>
-                                                        <TableCell numeric>{activeSub.type}</TableCell>
+                                                        <TableCell>{activeSub.serviceTypeName}</TableCell>
                                                         <TableCell>{activeSub.description}</TableCell>
                                                         <TableCell>{activeSub.activeUntil}</TableCell>
                                                     </TableRow>
@@ -1875,7 +1882,7 @@ class ClippedDrawer extends React.Component {
                                         <TableHead>
                                             <TableRow>
                                                 <TableCell>Service Name</TableCell>
-                                                <TableCell numeric>Service Type</TableCell>
+                                                <TableCell>Service Type</TableCell>
                                                 <TableCell>Description</TableCell>
                                                 <TableCell>Active Until</TableCell>
                                             </TableRow>
@@ -1887,7 +1894,7 @@ class ClippedDrawer extends React.Component {
                                                         <TableCell component="th" scope="row">
                                                             {activeSub.serviceName}
                                                         </TableCell>
-                                                        <TableCell numeric>{activeSub.type}</TableCell>
+                                                        <TableCell>{activeSub.serviceTypeName}</TableCell>
                                                         <TableCell>{activeSub.description}</TableCell>
                                                         <TableCell>{activeSub.activeUntil}</TableCell>
                                                     </TableRow>

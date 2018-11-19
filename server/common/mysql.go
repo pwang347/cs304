@@ -12,7 +12,7 @@ const (
 	DefaultMySQLUser = "root"
 
 	// DefaultMySQLPassword represents the default password
-	DefaultMySQLPassword = ""
+	DefaultMySQLPassword = "admin"
 
 	// DefaultMySQLHost represents the default host
 	DefaultMySQLHost = "localhost"

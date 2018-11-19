@@ -3,10 +3,9 @@ package queries
 import (
 	"database/sql"
 	"encoding/json"
+	"github.com/pwang347/cs304/server/common"
 	"net/url"
 	"strings"
-
-	"github.com/pwang347/cs304/server/common"
 )
 
 // CreateUser creates a new user
@@ -80,16 +79,16 @@ func UpdateUser(db *sql.DB, params url.Values) (data []byte, err error) {
 
 	// At least one param must be specified for the update to be valid
 	if firstName, err = common.GetRequiredParam(params, "firstName"); len(firstName) > 0 {
-		updateStatements = append(updateStatements, "firstName = "+firstName)
+		updateStatements = append(updateStatements, "firstName = " + "\"" + firstName + "\"")
 	}
 	if lastName, err = common.GetRequiredParam(params, "lastName"); len(lastName) > 0 {
-		updateStatements = append(updateStatements, "lastName = "+lastName)
+		updateStatements = append(updateStatements, "lastName = "+ "\"" + lastName + "\"")
 	}
 	if passwordHash, err = common.GetRequiredParam(params, "passwordHash"); len(passwordHash) > 0 {
-		updateStatements = append(updateStatements, "passwordHash = "+passwordHash)
+		updateStatements = append(updateStatements, "passwordHash = "+ "\"" + passwordHash + "\"")
 	}
 	if twoFactorPhoneNumber, err = common.GetRequiredParam(params, "twoFactorPhoneNumber"); len(twoFactorPhoneNumber) > 0 {
-		updateStatements = append(updateStatements, "twoFactorPhoneNumber = "+twoFactorPhoneNumber)
+		updateStatements = append(updateStatements, "twoFactorPhoneNumber = " + "\"" + twoFactorPhoneNumber + "\"")
 	}
 
 	if len(updateStatements) < 1 {

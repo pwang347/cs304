@@ -86,10 +86,10 @@ class CreationDialog extends React.Component {
           </DialogContent>
           <DialogActions>
             <Button onClick={this.handleClose.bind(this, this.state.data)} color="primary" autoFocus>
-              Create
+              {dialog.createText || "Create"}
             </Button>
             <Button onClick={this.handleClose.bind(this, null)} color="primary">
-              Cancel
+              {dialog.cancelText || "Cancel"}
             </Button>
           </DialogActions>
         </Dialog>

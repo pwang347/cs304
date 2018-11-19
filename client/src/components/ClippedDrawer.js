@@ -45,6 +45,8 @@ import PlayArrow from '@material-ui/icons/PlayArrow';
 import ListSubheader from "@material-ui/core/ListSubheader/ListSubheader";
 import DetailViewDialog from './DetailViewDialog';
 import DeviceHub from '@material-ui/icons/DeviceHub';
+import Add from '@material-ui/icons/Add';
+import Icon from '@material-ui/core/Icon';
 
 const drawerWidth = 300;
 
@@ -81,9 +83,15 @@ const styles = theme => ({
         height: 140,
     },
     accessGroup: {
-        width: drawerWidth,
-        margin: theme.spacing.unit,
+        marginTop: theme.spacing.unit*2,
+        marginBottom: theme.spacing.unit*2,
     },
+    table: {
+        margin: theme.spacing.unit *2,
+    },
+    titleDivider: {
+        marginBottom: theme.spacing.unit *4,
+    }
 });
 
 const defaultImageUrl = "https://material-ui.com/static/images/cards/contemplative-reptile.jpg";
@@ -625,6 +633,7 @@ class ClippedDrawer extends React.Component {
         var virtualMachine = this.state.virtualMachinesMap[virtualMachineIp];
         this.setState(state => ({creationDialog: {
             titleText: "Update " + virtualMachineIp,
+            createText: "Update",
             fields: [
                 {name: "Description"},
                 {name: "Cores", options: DATA_DEFAULTS["virtualMachine"]["cores"]},
@@ -1139,7 +1148,7 @@ class ClippedDrawer extends React.Component {
             title: "Select a user",
             onClose: this.handleAddUserToAccessGroupClose.bind(this),
             dataEndpoint: "/organization/listUsersInOrganizationNotInGroup?organizationName=" + this.props.organizationName
-                                    + "&accessGroupName=" + this.state.addingToGroup,
+                                    + "&accessGroupName=" + accessGroupName,
             displayfn: (user) => user.emailAddress,
             keyfn: (user) => user.emailAddress,
         },
@@ -1148,6 +1157,11 @@ class ClippedDrawer extends React.Component {
     
     handleAddUserToAccessGroupClose = (value) => {
         var groupName = this.state.addingToGroup;
+        this.setState(
+            {
+                addingToGroup: null,
+                collectionPickerDialog: null,
+            });
         if (value) {
             var url = BASE_API_URL + "/accessGroup/addUser?accessGroupName=" + groupName
             + "&accessGroupOrganizationName=" + this.props.organizationName
@@ -1172,7 +1186,6 @@ class ClippedDrawer extends React.Component {
                 self.setState(state => ({accessGroupsMap: self.state.accessGroupsMap}));
             });
         }
-        this.setState({addingToGroup: null});
     }
 
     handleAddUserToOrganization = () => {
@@ -1887,7 +1900,7 @@ class ClippedDrawer extends React.Component {
                             <ListItemIcon>
                                 <PersonIcon/>
                             </ListItemIcon>
-                            <ListItemText primary='My profile'/>
+                            <ListItemText primary={"My profile (" + this.props.user.firstName + " " + this.props.user.lastName + ")" }/>
                         </ListItem>
                         <ListItem button key='Sign out' onClick={this.props.logout}>
                             <ListItemIcon>
@@ -1900,7 +1913,9 @@ class ClippedDrawer extends React.Component {
                 <main className={classes.content}>
                     <div className={classes.toolbar}/>
                     {this.state.activePageId === "store" && <div>
-                    <Typography variant="headline" gutterBottom>Hello, {this.props.user.firstName}!</Typography>
+                    <Typography variant="h4" color="textSecondary">Store</Typography>
+                        <Divider className={classes.titleDivider}/>
+                    <Typography variant="headline" gutterBottom>Latest deals</Typography>
                         {this.state.services.map(function (service, idx) {
                             return (<Card className={classes.card} key={service.name} >
                                 <CardActionArea onClick={this.handleShowServiceDetails.bind(this, service.name)}>
@@ -2085,6 +2100,8 @@ class ClippedDrawer extends React.Component {
                         </Grid>
                     </div>}
                     {this.state.activePageId === "virtual-machines" && <div>
+                    <Typography variant="h4" color="textSecondary">Virtual machines</Typography>
+                        <Divider className={classes.titleDivider}/>
                         {this.state.organizationVirtualMachines.map(function (virtualMachine, idx) {
                             return (<Card className={classes.card} key={virtualMachine.ipAddress}>
                                 <CardActionArea onClick={this.handleVirtualMachineDetails.bind(this, virtualMachine.ipAddress)}>
@@ -2122,7 +2139,9 @@ class ClippedDrawer extends React.Component {
                         }.bind(this))}
                     </div>}
                     {this.state.activePageId === "billing" &&
-                        <Grid container spacing={24}>
+                    <div>
+                        <Typography variant="h4" color="textSecondary">Billing</Typography>
+                        <Divider className={classes.titleDivider}/>
                             <Grid item xs={12}>
                                 <Typography variant="headline" gutterBottom>Active Subscriptions</Typography>
                                 <Paper className={classes.paper}>
@@ -2244,40 +2263,47 @@ class ClippedDrawer extends React.Component {
                                     </Table>
                                 </Paper>
                             </Grid>
-                        </Grid>}
+                        </div>}
                     {this.state.activePageId === "credit-cards" && <div>
-                        <Grid container spacing={24}>
-                            <Typography variant="headline" gutterBottom>Credit Cards</Typography>
-                            <Button onClick={this.handleCreateCreditCard}><Typography variant="headline" gutterBottom>+</Typography></Button>
+                    <Typography variant="h4" color="textSecondary">Credit cards</Typography>
+                        <Divider className={classes.titleDivider}/>
                             <Grid item xs={12}>
                                 <Paper className={classes.paper}>
-                                    <List subheader={<ListSubheader component="div">Credit Cards</ListSubheader>}>
-                                        {this.state.organizationCreditCards.map(function (card, idx){
-                                            return (
-                                                <ListItem key={card.cardNumber}>
-                                                    <ListItemIcon>
-                                                        <CreditCardIcon/>
-                                                    </ListItemIcon>
-                                                    <ListItemSecondaryAction>
-                                                        <Button onClick={this.handleDeleteCreditCard.bind(this, card.cardNumber)}>Delete</Button>
-                                                    </ListItemSecondaryAction>
-                                                    <ListItemText inset primary={card.cardNumber}/>
-                                                    <ListItemText inset secondary={card.expiryDate}/>
-                                                </ListItem>
-                                            )}.bind(this))}
-                                    </List>
+                                <Table className={classes.table}>
+                                        <TableHead>
+                                            <TableRow>
+                                                <TableCell>Card number</TableCell>
+                                                <TableCell>Expiry date</TableCell>
+                                                <TableCell></TableCell>
+                                            </TableRow>
+                                        </TableHead>
+                                        <TableBody>
+                                            {this.state.organizationCreditCards.map(function (card, idx){
+                                                return (
+                                                    <TableRow key={card.cardNumber}>
+                                                        <TableCell>{card.cardNumber}</TableCell>
+                                                        <TableCell>{card.expiryDate}</TableCell>
+                                                        <TableCell>
+                                                            <Button size="small" color="primary" onClick={this.handleDeleteCreditCard.bind(this, card.cardNumber)}>Delete</Button>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                )}.bind(this))}
+                                        </TableBody>
+                                    </Table>
                                 </Paper>
                             </Grid>
-                        </Grid>
+                            <Button variant="contained" color="primary" onClick={this.handleCreateCreditCard}>
+                            Add credit card</Button>
                     </div>}
                     {this.state.activePageId === "access-groups" &&
                     <div>
-                        <Typography variant="headline" gutterBottom>Access groups</Typography>
+                        <Typography variant="h4" color="textSecondary">Access groups</Typography>
+                        <Divider className={classes.titleDivider}/>
                         {this.state.organizationAccessGroups.map(function (accessGroup, idx) {
                         return (
                             <div key={accessGroup.name}>
                             <div>
-                            <Typography variant="headline">{accessGroup.name}</Typography>
+                            <Typography variant="h5">{accessGroup.name}</Typography>
                             {this.state.userIsAdmin && <Button onClick={this.handleDeleteAccessGroup.bind(this, accessGroup.name)}>Delete</Button>}
                             </div>
                             <Paper className={classes.accessGroup}> 
@@ -2295,7 +2321,14 @@ class ClippedDrawer extends React.Component {
                                 </ListItem>
                                 )}.bind(this))}
                                 {this.state.userIsAdmin && <ListItem>
-                                    <Button onClick={this.handleAddUserToAccessGroup.bind(this, accessGroup.name)}>Add user</Button>
+                                    <Button onClick={this.handleAddUserToAccessGroup.bind(this, accessGroup.name)}>
+                                    <Icon>
+                                        <Add/>
+                                    </Icon>
+                                    &nbsp;&nbsp;&nbsp;&nbsp;
+                                    <Typography>
+                                        Add user
+                                    </Typography></Button>
                                 </ListItem>}
                                 </List>
                             </Paper>
@@ -2305,11 +2338,9 @@ class ClippedDrawer extends React.Component {
                             </Button>}
                     </div>}
                     {this.state.activePageId === "manage-users" && <div>
-                        <Grid container spacing={24}>
-                            <Typography variant="headline" gutterBottom>Manage Users in {this.props.organizationName}</Typography>
-                            <Button onClick={this.handleAddUserToOrganization}><Typography variant="headline" gutterBottom>+</Typography></Button>
+                        <Typography variant="h4" color="textSecondary">Manage {this.props.organizationName} Users</Typography>
+                        <Divider className={classes.titleDivider}/>
                             <Grid item xs={12}>
-                            <Typography variant="headline" gutterBottom>Users</Typography>
                                 <Paper className={classes.paper}>
                                     <Table className={classes.table}>
                                         <TableHead>
@@ -2342,8 +2373,9 @@ class ClippedDrawer extends React.Component {
                                         </TableBody>
                                     </Table>
                                 </Paper>
+                                <Button variant="contained" color="primary" onClick={this.handleAddUserToOrganization}>
+                                    Add user to organization</Button>
                             </Grid>
-                        </Grid>
                     </div>}
                     {this.state.activePageId === "my-profile" && <div>
                         <Button onClick={this.handleClickChangeOrganization}>

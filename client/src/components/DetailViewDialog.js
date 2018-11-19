@@ -90,7 +90,7 @@ class DetailViewDialog extends React.Component {
               <div>
                 {dialog.tables.map(function (table, idx) {
                 return (
-                    <List key={idx} width="100%">
+                    <List key={idx}>
                         <ListItem>
                         <Typography>
                             {table.title}
@@ -98,7 +98,7 @@ class DetailViewDialog extends React.Component {
                         {table.hasOwnProperty("addFn") && <Button color="primary" onClick={this.handleAdd.bind(this, table)}>Add</Button>}
                         </ListItem>
                         <ListItem>
-                        <Table>
+                        <Table className={classes.table}>
                             <TableHead>
                             <TableRow>
                             {table.columns.map(function (column, idx) {

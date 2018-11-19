@@ -98,7 +98,7 @@ func GetAllServicesWithAllTypes(db *sql.DB, params url.Values) (data []byte, err
 		return nil, err
 	}
 	if response.Data, response.AffectedRows, err = common.QueryJSON(tx,
-		"select distinct s.name, s.description, s.isPreview, s.isEnabled, s.isVirtualMachineService, s.imageURL " +
+		"select distinct s.name, s.description, s.isPreview, s.isEnabled, s.isVirtualMachineService, s.imageUrl " +
 		"from Service s, ServiceServiceTypePairs sst1 " +
 		"where s.name = sst1.serviceName and not exists (" +
 		"select st.type from ServiceType st where st.type not in (" +

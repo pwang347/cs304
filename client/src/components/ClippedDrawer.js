@@ -48,6 +48,8 @@ import DetailViewDialog from './DetailViewDialog';
 import DeviceHub from '@material-ui/icons/DeviceHub';
 import Add from '@material-ui/icons/Add';
 import Icon from '@material-ui/core/Icon';
+import FormControlLabel from '@material-ui/core/FormControlLabel';
+
 
 const drawerWidth = 300;
 
@@ -92,7 +94,20 @@ const styles = theme => ({
     },
     titleDivider: {
         marginBottom: theme.spacing.unit *4,
-    }
+    },
+    switch: {
+        margin: theme.spacing.unit *2,
+    },
+    latestDeals: {
+        marginTop: theme.spacing.unit *2,
+    },
+    virtualMachineButton: {
+        width: 100,
+        marginRight: theme.spacing.unit * 2,
+    },
+    lowerBtn: {
+        marginRight: theme.spacing.unit * 2,
+    },
 });
 
 const defaultImageUrl = "https://material-ui.com/static/images/cards/contemplative-reptile.jpg";
@@ -1942,10 +1957,20 @@ class ClippedDrawer extends React.Component {
                     {this.state.activePageId === "store" && <div>
                     <Typography variant="h4" color="textSecondary">Store</Typography>
                         <Divider className={classes.titleDivider}/>
-                    <Typography variant="headline" gutterBottom>Latest deals</Typography>
-                        <Switch
-                            onChange={this.loadServicesWithAllTypes.bind(this)}
-                        />
+                    <Grid item xs={12}>
+                                <Paper className={classes.paper}>
+                                <FormControlLabel className={classes.switch}
+                                control={
+                                    <Switch
+                                    onChange={this.loadServicesWithAllTypes.bind(this)}
+                                    color="secondary"
+                                    />
+                                    }
+                                    label="Only services with all subscription modes"
+                                    />
+                                </Paper>
+                        </Grid>
+                        <Typography className={classes.latestDeals} variant="headline" gutterBottom>Latest deals</Typography>
                         {this.state.services.map(function (service, idx) {
                             return (<Card className={classes.card} key={service.name} >
                                 <CardActionArea onClick={this.handleShowServiceDetails.bind(this, service.name)}>
@@ -1999,27 +2024,32 @@ class ClippedDrawer extends React.Component {
                                     </CardContent>
                                 </CardActionArea>
                                 <CardActions>
-                                    <Button size="small" color="primary" onClick={this.handleVirtualMachineConfiguration.bind(this, virtualMachine.ipAddress)}>
-                                        Configure
-                                    </Button>
-                                    <Button size="small" color="primary" onClick={this.handleVirtualMachineAccess.bind(this, virtualMachine.ipAddress)}>
+                                    <List>
+                                        <ListItem>
+                                        <Button className={classes.virtualMachineButton} size="small" color="primary" onClick={this.handleVirtualMachineConfiguration.bind(this, virtualMachine.ipAddress)}>
+                                            Configure
+                                        </Button>
+                                        <Button className={classes.virtualMachineButton} size="small" color="primary" onClick={this.handleVirtualMachineAccess.bind(this, virtualMachine.ipAddress)}>
                                         Access
                                     </Button>
-                                    <br/>
-                                    <Button size="small" color="primary" onClick={this.handleVirtualMachineLogs.bind(this, virtualMachine.ipAddress)}>
+                                        </ListItem>
+                                        <ListItem>
+                                            <Button className={classes.virtualMachineButton} size="small" color="primary" onClick={this.handleVirtualMachineLogs.bind(this, virtualMachine.ipAddress)}>
                                         Logs
                                     </Button>
-                                    <Button size="small" color="primary" onClick={this.handleDeleteVirtualMachine.bind(this, virtualMachine.ipAddress)}>
+                                    <Button className={classes.virtualMachineButton} size="small" color="secondary" onClick={this.handleDeleteVirtualMachine.bind(this, virtualMachine.ipAddress)}>
                                         Terminate
                                     </Button>
+                                        </ListItem>
+                                    </List>
                                 </CardActions>
                             </Card>)
                         }.bind(this))}
                         <br/>
-                        <Button variant="contained" color="primary" onClick={this.handleCreateVirtualMachine}>
+                        <Button className={classes.lowerBtn} variant="contained" color="primary" onClick={this.handleCreateVirtualMachine}>
                             Create new virtual machine
                         </Button>
-                            <Button variant="contained" color="primary" onClick={this.handleViewSubscriptions}>
+                            <Button className={classes.lowerBtn} variant="contained" color="primary" onClick={this.handleViewSubscriptions}>
                                 View Subscriptions/Transactions
                             </Button>
                         </div>
@@ -2048,17 +2078,17 @@ class ClippedDrawer extends React.Component {
                                             onClick={this.handleServiceInstanceConfiguration.bind(this, serviceInstance.name)}>
                                         Configure
                                     </Button>
-                                    <Button size="small" color="primary" onClick={this.handleDeleteServiceInstance.bind(this, serviceInstance.name)}>
+                                    <Button size="small" color="secondary" onClick={this.handleDeleteServiceInstance.bind(this, serviceInstance.name)}>
                                         Terminate
                                     </Button>
                                 </CardActions>
                             </Card>)
                         }.bind(this))}
                         <br/>
-                        <Button variant="contained" color="primary" onClick={this.handleCreateServiceInstance}>
+                        <Button className={classes.lowerBtn} variant="contained" color="primary" onClick={this.handleCreateServiceInstance}>
                             Create new instance
                         </Button>
-                            <Button variant="contained" color="primary" onClick={this.handleViewSubscriptions}>
+                            <Button className={classes.lowerBtn} variant="contained" color="primary" onClick={this.handleViewSubscriptions}>
                                 View Subscriptions/Transactions
                             </Button>
                         </div>)}
@@ -2152,18 +2182,24 @@ class ClippedDrawer extends React.Component {
                                     </CardContent>
                                 </CardActionArea>
                                 <CardActions>
-                                    <Button size="small" color="primary" onClick={this.handleVirtualMachineConfiguration.bind(this, virtualMachine.ipAddress)}>
-                                        Configure
-                                    </Button>
-                                    <Button size="small" color="primary" onClick={this.handleVirtualMachineAccess.bind(this, virtualMachine.ipAddress)}>
+                                    <List>
+                                        <ListItem>
+                                        <Button className={classes.virtualMachineButton} size="small" color="primary" onClick={this.handleVirtualMachineConfiguration.bind(this, virtualMachine.ipAddress)}>
+                                            Configure
+                                        </Button>
+                                        <Button className={classes.virtualMachineButton} size="small" color="primary" onClick={this.handleVirtualMachineAccess.bind(this, virtualMachine.ipAddress)}>
                                         Access
                                     </Button>
-                                    <Button size="small" color="primary" onClick={this.handleVirtualMachineLogs.bind(this, virtualMachine.ipAddress)}>
+                                        </ListItem>
+                                        <ListItem>
+                                            <Button className={classes.virtualMachineButton} size="small" color="primary" onClick={this.handleVirtualMachineLogs.bind(this, virtualMachine.ipAddress)}>
                                         Logs
                                     </Button>
-                                    <Button size="small" color="primary" onClick={this.handleDeleteVirtualMachine.bind(this, virtualMachine.ipAddress)}>
+                                    <Button className={classes.virtualMachineButton} size="small" color="secondary" onClick={this.handleDeleteVirtualMachine.bind(this, virtualMachine.ipAddress)}>
                                         Terminate
                                     </Button>
+                                        </ListItem>
+                                    </List>
                                 </CardActions>
                             </Card>)
                         }.bind(this))}

@@ -54,7 +54,7 @@ class App extends Component {
           </Toolbar>
         </AppBar>
         {this.state.isLoggedIn === false && <LoginPage login={this.login} setUser={this.setUser}/>}
-        {(this.state.isLoggedIn === true && this.state.organizationName === null) && <OrganizationPage setOrganization={this.setOrganization} userEmailAddress={this.state.user.emailAddress}/>}
+        {(this.state.isLoggedIn === true && this.state.organizationName === null) && <OrganizationPage setOrganization={this.setOrganization} user={this.state.user}/>}
         {(this.state.isLoggedIn === true && this.state.organizationName !== null) &&
         <ClippedDrawer setOrganization={this.setOrganization}
                        logout={this.logout}

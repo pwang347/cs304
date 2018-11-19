@@ -7,6 +7,7 @@ import Typography from '@material-ui/core/Typography';
 import List from '@material-ui/core/List';
 import ListItem from '@material-ui/core/ListItem';
 import CollectionPickerDialog from './CollectionPickerDialog';
+import Divider from '@material-ui/core/Divider';
 
 const styles = theme => ({
     root: {
@@ -14,10 +15,13 @@ const styles = theme => ({
       },
     content: {
         flexGrow: 1,
-        padding: theme.spacing.unit * 30,
+        padding: theme.spacing.unit * 40,
         justifyContent: 'center',
         alignItems:'center',
         display: 'flex',
+    },
+    title: {
+        marginLeft: theme.spacing.unit * 3,
     },
 });
 
@@ -41,7 +45,7 @@ class OrganizationPage extends React.Component {
             collectionPickerDialog: {
                 title: "Select an organization",
                 onClose: this.handleClose.bind(this),
-                dataEndpoint: "/organization/listUser?userEmailAddress=" + this.props.userEmailAddress,
+                dataEndpoint: "/organization/listUser?userEmailAddress=" + this.props.user.emailAddress,
                 displayfn: (pair) => pair.organizationName,
                 keyfn: (pair) => pair.organizationName,
             },
@@ -63,7 +67,7 @@ class OrganizationPage extends React.Component {
         }
         var newOrganizationName = this.state.newOrganizationName;
         var url = BASE_API_URL + "/organization/create?name=" + newOrganizationName
-        + "&contactEmailAddress=" + this.props.userEmailAddress;
+        + "&contactEmailAddress=" + this.props.user.emailAddress;
         var self = this;
         fetch(url)
         .then(function(response) {
@@ -97,9 +101,15 @@ class OrganizationPage extends React.Component {
             <main className={classes.content}>
             <List>
                 <ListItem>
-                    <Button onClick={this.handleClickOpen}>Select an organization</Button>
+                    <Typography className={classes.title} variant="h2">
+                        Organizations
+                    </Typography>
+                </ListItem>
+                <Divider></Divider>
+                <ListItem>
+                    <Button className={classes.button} color="primary" onClick={this.handleClickOpen}>Select an organization</Button>
                     {this.state.collectionPickerDialog && <CollectionPickerDialog open={this.state.open} dialog={this.state.collectionPickerDialog}/>}
-                    <Button variant="contained" color="primary" onClick={this.handleCreate}>
+                    <Button className={classes.button} color="secondary" onClick={this.handleCreate}>
                         Create new organization
                     </Button>
                 </ListItem>

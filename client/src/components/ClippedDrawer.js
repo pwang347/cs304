@@ -20,6 +20,7 @@ import ExitToApp from '@material-ui/icons/ExitToApp';
 import Collapse from '@material-ui/core/Collapse';
 import ViewModule from '@material-ui/icons/ViewModule';
 import Camera from '@material-ui/icons/Camera';
+import Switch from '@material-ui/core/Switch';
 import Computer from '@material-ui/icons/Computer';
 import AttachMoney from '@material-ui/icons/AttachMoney';
 import CreditCardIcon from '@material-ui/icons/CreditCard';
@@ -505,6 +506,32 @@ class ClippedDrawer extends React.Component {
                     self.state.servicesMap[service.name] = service;
                 }
             });
+    }
+
+    loadServicesWithAllTypes = (event) => {
+        var checked = event.target.checked;
+        if (checked) {
+            var url = BASE_API_URL + "/service/listWithAllTypes";
+            var self = this;
+            fetch(url)
+                .then(function (response) {
+                    if (response.status >= 400) {
+                        throw new Error("Bad response from server");
+                    }
+                    return response.json();
+                })
+                .then(function (json) {
+                    var services = JSON.parse(json.data);
+                    self.setState({
+                        services: services
+                    });
+                    for (var service of services) {
+                        self.state.servicesMap[service.name] = service;
+                    }
+                });
+        } else {
+            this.loadServices();
+        }
     }
 
     handleCloseForCreateServiceInstanceConfiguration = (serviceInstanceName, refreshFn, result) => {
@@ -1804,6 +1831,9 @@ class ClippedDrawer extends React.Component {
                     <div className={classes.toolbar}/>
                     {this.state.activePageId === "store" && <div>
                     <Typography variant="headline" gutterBottom>Hello, {this.props.user.firstName}!</Typography>
+                        <Switch
+                            onChange={this.loadServicesWithAllTypes.bind(this)}
+                        />
                         {this.state.services.map(function (service, idx) {
                             return (<Card className={classes.card} key={service.name} >
                                 <CardActionArea onClick={this.handleShowServiceDetails.bind(this, service.name)}>

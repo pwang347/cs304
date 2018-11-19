@@ -69,6 +69,7 @@ var (
 		"list":              queries.QueryAllServices,
 		"listSubscriptions": queries.GetServiceSubscriptions,
 		"listServiceTypes":  queries.GetServiceTypes,
+		"listWithAllTypes":  queries.GetAllServicesWithAllTypes,
 	}
 	serviceInstanceQueries = map[string]query{
 		"create":                  queries.CreateServiceInstance,

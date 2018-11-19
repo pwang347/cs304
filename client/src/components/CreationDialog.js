@@ -47,11 +47,19 @@ class CreationDialog extends React.Component {
     });
   }
 
+  handleOpen = () => {
+    if (!this.props.dialog.updateDefaults) {
+      return;
+    }
+    this.setState(state => ({data: this.props.dialog.updateDefaults}));
+  }
+
   render() {
     const { classes, onClose, dialog, ...other } = this.props;
     return (
       <div>
         <Dialog
+          onEnter={this.handleOpen}
           onClose={this.handleClose.bind(this, false)}
           aria-labelledby="alert-dialog-title"
           aria-describedby="alert-dialog-description"
@@ -81,6 +89,7 @@ class CreationDialog extends React.Component {
                         floatinglabeltext={field.name}
                         margin="normal"
                         onChange={this.handleDataChange.bind(this, field)}
+                        value={this.state.data[field.name]}
                     />}
                     </ListItem>
             )}.bind(this))}

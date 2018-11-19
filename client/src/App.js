@@ -49,7 +49,7 @@ class App extends Component {
             <CloudQueueIcon />
             &nbsp;&nbsp;&nbsp;&nbsp;
             <Typography variant="h6" color="inherit" noWrap>
-                Design Cloud
+                {this.state.organizationName !== null? "Design Cloud / " + this.state.organizationName : "Design Cloud"}
             </Typography>
           </Toolbar>
         </AppBar>

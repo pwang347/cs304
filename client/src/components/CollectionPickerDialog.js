@@ -63,8 +63,8 @@ class CollectionPickerDialog extends React.Component {
             <List>
               {this.state.data.map(function (d, idx) {
                   return (
-                <ListItem button onClick={this.handleListItemClick.bind(this, dialog.keyfn(d))} key={dialog.keyfn(d)}>
-                  <ListItemText primary={dialog.displayfn(d)} />
+                <ListItem button onClick={this.handleListItemClick.bind(this, dialog.keyfn? dialog.keyfn(d) : d)} key={dialog.keyfn? dialog.keyfn(d) : d}>
+                  <ListItemText primary={dialog.displayfn? dialog.displayfn(d) : d} />
                 </ListItem>
               )}.bind(this))}
             </List>
